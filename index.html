@@ -1,0 +1,519 @@
+<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreditGuide AI · Integrated Prototype</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* (keep your existing styles here - unchanged) */
+        * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; }
+        body { background:#f0f5fa; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:1.5rem; }
+        .prototype-container { max-width:900px; width:100%; background:white; border-radius:32px; box-shadow:0 20px 40px -10px rgba(0,30,60,0.25); overflow:hidden; }
+        .header { background:linear-gradient(145deg,#0b2e4a,#123b5e); color:white; padding:1.8rem 2rem; }
+        .header h1 { font-weight:600; font-size:1.9rem; letter-spacing:-0.01em; }
+        .header p { opacity:0.85; margin-top:0.3rem; font-size:1rem; }
+        .step-indicator { display:flex; background:#eef2f7; padding:0.75rem 2rem; gap:1.5rem; border-bottom:1px solid #d9e2ec; }
+        .step { display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; font-weight:500; color:#4a5f73; }
+        .step.active { color:#0f3b5e; font-weight:700; }
+        .step .number { background:#cfddee; color:#1f3a57; width:26px; height:26px; border-radius:26px; display:inline-flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:600; }
+        .step.active .number { background:#0f3b5e; color:white; }
+        .screen { padding:2rem; display:none; }
+        .screen.active { display:block; }
+        h2 { font-size:1.5rem; font-weight:600; margin-bottom:1.25rem; color:#0b2e4a; }
+        .section-title { font-weight:600; font-size:1.1rem; margin:1.5rem 0 0.8rem 0; color:#1e4a6d; border-left:5px solid #1e4a6d; padding-left:0.75rem; }
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem 1.5rem; margin-bottom:1rem; }
+        .full-width { grid-column:span 2; }
+        label { display:block; font-weight:500; font-size:0.9rem; margin-bottom:0.25rem; color:#2c3e50; }
+        input, select, textarea { width:100%; padding:0.7rem 1rem; border:1px solid #cbd6e3; border-radius:16px; font-size:0.95rem; background:white; transition:0.15s; }
+        input:focus, select:focus { outline:none; border-color:#1e6f9f; box-shadow:0 0 0 3px rgba(20,88,140,0.15); }
+        .radio-group { display:flex; gap:1.5rem; align-items:center; flex-wrap:wrap; background:#f8fafd; padding:0.7rem 1rem; border-radius:40px; border:1px solid #dde5ef; }
+        .radio-group label { display:inline-flex; align-items:center; gap:0.4rem; font-weight:400; margin-bottom:0; cursor:pointer; }
+        .conditional { background:#f4f9ff; border-radius:24px; padding:1.2rem 1.5rem; margin:1rem 0 0.5rem 0; border:1px solid #c2d9f0; }
+        .btn-row { display:flex; justify-content:space-between; margin-top:2rem; gap:1rem; }
+        button { background:white; border:1px solid #1e6f9f; color:#1e6f9f; padding:0.8rem 2rem; border-radius:40px; font-weight:600; font-size:1rem; cursor:pointer; transition:0.2s; }
+        button.primary { background:#1e6f9f; color:white; border:none; box-shadow:0 8px 16px -6px #1e6f9f80; }
+        button.primary:hover { background:#135b84; }
+        button:hover { background:#e3effa; }
+        .report-card { background:#f9fcff; border-radius:24px; padding:1.5rem; margin:1.5rem 0; border:1px solid #cfe2f5; }
+        .badge { display:inline-block; background:#ffd966; padding:0.25rem 1rem; border-radius:30px; font-weight:600; font-size:0.8rem; letter-spacing:0.02em; color:#3d2f00; margin-bottom:0.5rem; }
+        .badge.green { background:#c5e0b4; color:#1f4f1f; }
+        .metric-row { display:flex; flex-wrap:wrap; gap:1.2rem 2rem; margin:0.5rem 0 1rem 0; }
+        .metric-item { background:white; padding:0.6rem 1.2rem; border-radius:30px; box-shadow:0 2px 6px #d0e0f0; font-weight:500; }
+        hr { border:none; border-top:2px dashed #bdd6ec; margin:1.5rem 0; }
+        .small-note { font-size:0.85rem; color:#4a6f8c; margin-top:0.3rem; }
+        ul { list-style-type:none; padding-left:0.5rem; }
+        ul li { padding:0.3rem 0 0.3rem 1.5rem; background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%231e6f9f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>') left center no-repeat; background-size:16px; }
+        footer { background:#f2f7fd; padding:1rem 2rem; text-align:center; color:#6a7f99; font-size:0.85rem; border-top:1px solid #d2e2f2; }
+        .rating-good { background:#d4edda; color:#155724; }
+        .rating-average { background:#fff3cd; color:#856404; }
+        .rating-poor { background:#f8d7da; color:#721c24; }
+        .ratio-table { width:100%; border-collapse:collapse; background:#f8fafd; border-radius:20px; overflow:hidden; margin:1rem 0; }
+        .ratio-table th { background:#e2eaf6; text-align:left; padding:0.9rem 1rem; font-weight:600; }
+        .ratio-table td { padding:0.8rem 1rem; border-bottom:1px solid #d4e0ec; }
+        .query-item { background:#f2f6fc; border-radius:18px; padding:1.2rem; margin-bottom:1rem; }
+        .query-question { font-weight:600; margin-bottom:0.5rem; }
+        .reply-box { background:white; border-radius:16px; padding:1rem; border:1px dashed #2a7de1; margin-top:0.8rem; font-style:italic; }
+        .hidden { display:none; }
+        .mt-3 { margin-top:1.5rem; }
+        .text-small { font-size:0.85rem; color:#4b6584; }
+    </style>
+</head>
+<body>
+<div class="prototype-container">
+    <div class="header">
+        <h1>🤝 CreditGuide AI</h1>
+        <p>MSME loan readiness · instant intelligence</p>
+    </div>
+
+    <!-- step indicator -->
+    <div class="step-indicator">
+        <div class="step active" id="step1-label"><span class="number">1</span> Business intro</div>
+        <div class="step" id="step2-label"><span class="number">2</span> Snapshot</div>
+        <div class="step" id="step3-label"><span class="number">3</span> Operating</div>
+        <div class="step" id="step4-label"><span class="number">4</span> Report</div>
+    </div>
+
+    <!-- SCREEN 1 – BUSINESS INTRODUCTION -->
+    <div class="screen active" id="screen1">
+        <h2>Welcome to CreditGuide AI</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem; color: #205b84;">“Sabse pehle humein aapke business ke baare mein batayein.”</p>
+        <label for="businessDesc">Describe your business</label>
+        <input type="text" id="businessDesc" placeholder="e.g. I run a textile manufacturing unit producing cotton fabric." value="I run a textile manufacturing unit producing cotton fabric." style="margin-bottom: 2rem;">
+        <div class="btn-row" style="justify-content: flex-end;">
+            <button class="primary" id="continue1">Continue →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2 – BUSINESS SNAPSHOT & FINANCIALS -->
+    <div class="screen" id="screen2">
+        <h2>📋 Business snapshot & financials</h2>
+        <!-- ... (all your existing fields, unchanged) ... -->
+        <div class="section-title">📍 Business details</div>
+        <div class="form-grid">
+            <div><label>Business Location</label><input type="text" id="location" placeholder="City, State" value="Gandhinagar, Gujarat"></div>
+            <div><label>Vintage (years)</label><input type="number" id="vintage" value="7"></div>
+            <div class="full-width"><label>Average Monthly Turnover (₹)</label><input type="text" id="turnover" placeholder="e.g. 12,50,000" value="18,40,000"></div>
+        </div>
+        <div class="section-title">🏭 Business identity & financial snapshot</div>
+        <div class="form-grid">
+            <div><label>Industry Type *</label><select id="industryType"><option value="Manufacturing" selected>Manufacturing</option><option value="Trading">Trading</option><option value="Services">Services</option></select></div>
+            <div><label>Specific Industry</label><input type="text" id="specificIndustry" placeholder="e.g. Garments" value="Garments"></div>
+            <div><label>Constitution</label><select id="constitution"><option>Proprietorship</option><option>Partnership</option><option>Pvt Ltd</option></select></div>
+            <div><label>Annual Sales (₹ Lakhs)</label><input type="number" id="sales" value="500"></div>
+            <div><label>Net Profit (₹ Lakhs)</label><input type="number" id="netProfit" value="30"></div>
+            <div><label>Capital Deployed (₹ Lakhs)</label><input type="number" id="capitalDeployed" value="200"></div>
+            <div><label>Fixed Assets (₹ Lakhs)</label><input type="number" id="fixedAssets" value="120"></div>
+            <div class="full-width"><label>Existing Term Loan?</label><div style="display: flex; gap: 1rem; align-items: center;"><label><input type="radio" name="termLoan" value="yes" checked> Yes</label><label><input type="radio" name="termLoan" value="no"> No</label><input type="number" id="termLoanAmount" placeholder="Amount (₹ Lakhs)" value="80" style="width:200px;"></div></div>
+        </div>
+        <div class="section-title">🏦 Existing Banking Exposure</div>
+        <div><label>Existing Working Capital Limit?</label><div class="radio-group" id="existingLimitGroup"><label><input type="radio" name="existingLimit" value="none" checked> No existing limit</label><label><input type="radio" name="existingLimit" value="sameBank"> Yes – with same bank</label><label><input type="radio" name="existingLimit" value="otherBank"> Yes – with other bank</label></div></div>
+        <div class="conditional" id="existingLimitFields" style="display: none;"><div class="form-grid"><div><label>Existing Limit Amount (₹)</label><input type="text" id="existingAmount" value="45,00,000"></div><div><label>Utilisation Level</label><select id="utilisation"><option>Low (<50%)</option><option selected>Moderate (50–75%)</option><option>High (>75%)</option></select></div></div></div>
+        <div class="section-title">📌 Proposed Requirement</div>
+        <div class="form-grid"><div><label>Loan Type</label><select id="loanType"><option>Working Capital</option><option>Enhancement</option><option>New Limit</option></select></div><div><label>Proposed Limit Amount (₹)</label><input type="text" id="proposedAmount" value="75,00,000"></div></div>
+        <div class="btn-row">
+            <button class="back2" id="backFrom2">← Back</button>
+            <button class="primary" id="continue2">Continue →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3 – OPERATING & CREDIT BEHAVIOUR -->
+    <div class="screen" id="screen3">
+        <h2>⚙️ Operating & credit behaviour</h2>
+        <div class="form-grid">
+            <div><label>Avg Collection Period (days)</label><input type="number" id="collectionPeriod" value="90"></div>
+            <div><label>Inventory Holding Period (days)</label><input type="number" id="inventoryPeriod" value="75"></div>
+            <div><label>Raw Material Purchase Terms</label><input type="text" id="rawMaterialTerms" value="30 days credit"></div>
+            <div><label>Seasonality</label><input type="text" id="seasonality" value="Peak in festive season"></div>
+            <div><label>Existing EMI / Term Loans</label><input type="text" id="existingEMI" value="₹ 1.2L/month (auto loan)"></div>
+            <div><label>Primary Repayment Source</label><input type="text" id="repaymentSource" value="Business cash flow"></div>
+        </div>
+        <div class="section-title">📊 Working Capital Details (₹ Lakhs)</div>
+        <div class="form-grid">
+            <div><label>Stock (₹ Lakhs)</label><input type="number" id="stock" value="110"></div>
+            <div><label>Debtors (₹ Lakhs)</label><input type="number" id="debtors" value="85"></div>
+            <div><label>Creditors (₹ Lakhs)</label><input type="number" id="creditors" value="70"></div>
+        </div>
+        <div class="section-title">🔧 Operational Clarifications</div>
+        <div id="manufacturingExtra" style="background:#f2f8ff; padding:1rem; border-radius:20px; margin-bottom:1rem;">
+            <div class="form-grid">
+                <div><label>RM % (if manufacturing)</label><input type="number" id="rmPercent" value="40" min="0" max="100"></div>
+                <div><label>WIP %</label><input type="number" id="wipPercent" value="20" min="0" max="100"></div>
+                <div><label>FG %</label><input type="number" id="fgPercent" value="40" min="0" max="100"></div>
+            </div>
+        </div>
+        <div class="form-grid">
+            <div><label>Seasonal sales variation</label><select id="seasonal"><option>Low</option><option>Moderate</option><option>High</option></select></div>
+            <div><label>Customer concentration (% top 3)</label><input type="number" id="customerConc" value="60"></div>
+            <div><label>Margin pressure (input)</label><select id="marginPressure"><option>Stable</option><option>Moderate</option><option>High</option></select></div>
+        </div>
+        <div class="btn-row">
+            <button class="back3" id="backFrom3">← Back</button>
+            <button class="primary" id="generateReportBtn">Generate Proposal Readiness Report →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 4 – PROPOSAL READINESS REPORT -->
+    <div class="screen" id="screen4">
+        <h2>📄 Proposal Readiness Report</h2>
+        <div class="report-card" id="businessModelCard">
+            <span class="badge green">🔵 SECTION 1 – Business Model Commentary</span>
+            <div style="display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0 1rem;">
+                <span id="ratingBadge" class="rating-good" style="padding: 0.3rem 1rem; border-radius:30px; font-weight:700;">Good</span>
+                <span style="color: #1e3b5c;" id="ratingText">Business Model: GOOD</span>
+            </div>
+            <p id="ratingNarration" style="background: white; border-radius: 16px; padding: 1rem;">“The textile manufacturing model demonstrates stable demand with established operations. Margin improvement through cost optimisation and broader customer diversification will strengthen sustainability.”</p>
+            <p class="small-note" id="existingCommentary" style="margin-top: 0.5rem;">⚠️ High utilisation of existing limit indicates dependency on bank funding. Proposal must justify enhancement requirement.</p>
+        </div>
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 2 – Sales & Working Capital Analysis</span>
+            <div class="metric-row" id="wcMetrics"></div>
+            <p id="wcCommentary">“Extended working capital cycle supports need for bank funding. However, receivable cycle above industry average may invite clarification.”</p>
+            <p class="small-note" id="wcSuggestion">New limit proposal requires detailed cash flow justification.</p>
+        </div>
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 3 – Ratio Analysis Summary</span>
+            <table class="ratio-table"><thead><tr><th>Ratio</th><th>Value</th><th>Benchmark</th><th>Comment</th></tr></thead><tbody id="ratioBody"></tbody></table>
+        </div>
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 4 – Likely Bank Queries</span>
+            <div id="queryContainer"></div>
+        </div>
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 5 – Required Documents Checklist</span>
+            <ul id="docList"><li>3 years financial statements</li><li>GST returns</li><li>6–12 month bank statement</li><li>Debtor ageing</li><li>Stock statement</li></ul>
+        </div>
+        <div class="btn-row" style="justify-content: space-between;">
+            <button id="editInputs" class="back4">← Edit inputs</button>
+            <button class="primary" id="newAssessment">New assessment</button>
+        </div>
+    </div>
+
+    <footer>⚡ Integrated Prototype for AI for Bharat Hackathon · dynamic AI‑ready analysis</footer>
+</div>
+
+<script>
+    (function() {
+        // ---------- SCREEN NAVIGATION ----------
+        const screens = ['screen1', 'screen2', 'screen3', 'screen4'];
+        const stepLabels = ['step1-label', 'step2-label', 'step3-label', 'step4-label'];
+
+        function showScreen(n) {
+            // n is 1-based index (1..4)
+            screens.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (idx + 1 === n) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+            });
+            stepLabels.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (idx + 1 === n) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+            });
+            console.log('Now showing screen', n);
+        }
+
+        // Button handlers
+        document.getElementById('continue1').addEventListener('click', () => showScreen(2));
+        document.getElementById('continue2').addEventListener('click', () => showScreen(3));
+        document.getElementById('backFrom2').addEventListener('click', () => showScreen(1));
+        document.getElementById('backFrom3').addEventListener('click', () => showScreen(2));
+        document.getElementById('editInputs').addEventListener('click', () => showScreen(3));
+        document.getElementById('newAssessment').addEventListener('click', () => showScreen(1));
+
+        // Generate report button
+        document.getElementById('generateReportBtn').addEventListener('click', function() {
+            populateReport();
+            showScreen(4);
+        });
+
+        // ---------- TOGGLE EXISTING LIMIT FIELDS ----------
+        const existingRadios = document.querySelectorAll('input[name="existingLimit"]');
+        const existingFields = document.getElementById('existingLimitFields');
+        function toggleExistingLimit() {
+            const selected = document.querySelector('input[name="existingLimit"]:checked');
+            if (selected && selected.value !== 'none') {
+                existingFields.style.display = 'block';
+            } else {
+                existingFields.style.display = 'none';
+            }
+        }
+        existingRadios.forEach(radio => radio.addEventListener('change', toggleExistingLimit));
+        toggleExistingLimit(); // initial
+
+        // ---------- TOGGLE MANUFACTURING EXTRA ----------
+        const industrySelect = document.getElementById('industryType');
+        const manufacturingExtra = document.getElementById('manufacturingExtra');
+        function toggleManufacturing() {
+            if (industrySelect.value === 'Manufacturing') {
+                manufacturingExtra.style.display = 'block';
+            } else {
+                manufacturingExtra.style.display = 'none';
+            }
+        }
+        industrySelect.addEventListener('change', toggleManufacturing);
+        toggleManufacturing();
+
+        // ---------- TERM LOAN DISABLE ----------
+        const termYes = document.querySelector('input[name="termLoan"][value="yes"]');
+        const termNo = document.querySelector('input[name="termLoan"][value="no"]');
+        const termAmt = document.getElementById('termLoanAmount');
+        function toggleTermLoan() {
+            termAmt.disabled = termNo.checked;
+        }
+        termYes.addEventListener('change', toggleTermLoan);
+        termNo.addEventListener('change', toggleTermLoan);
+        toggleTermLoan();
+
+        // ---------- ANALYSIS FUNCTIONS (same as before) ----------
+        function getIndustryAvgGrossMargin(industry, specific) {
+            const type = (industry || '').toLowerCase();
+            const spec = (specific || '').toLowerCase();
+            if (type.includes('manufacturing')) {
+                if (spec.includes('garment')) return 0.40;
+                if (spec.includes('textile')) return 0.30;
+                return 0.35;
+            } else if (type.includes('trading')) {
+                return 0.15;
+            } else {
+                return 0.25;
+            }
+        }
+
+        function calculateRatios() {
+            const sales = parseFloat(document.getElementById('sales').value) || 0;
+            const np = parseFloat(document.getElementById('netProfit').value) || 0;
+            const stock = parseFloat(document.getElementById('stock').value) || 0;
+            const debtors = parseFloat(document.getElementById('debtors').value) || 0;
+            const creditors = parseFloat(document.getElementById('creditors').value) || 0;
+            const termLoanAmt = document.querySelector('input[name="termLoan"]:checked').value === 'yes' ? (parseFloat(document.getElementById('termLoanAmount').value) || 0) : 0;
+
+            const industry = document.getElementById('industryType').value;
+            const specific = document.getElementById('specificIndustry').value;
+            const avgMargin = getIndustryAvgGrossMargin(industry, specific);
+            const estimatedGP = sales * avgMargin;
+            const gpPercent = sales > 0 ? (estimatedGP / sales) * 100 : 0;
+            const npPercent = sales > 0 ? (np / sales) * 100 : 0;
+
+            const ca = stock + debtors;
+            const cl = creditors;
+            const currentRatio = cl > 0 ? ca / cl : (ca > 0 ? 999 : 0);
+
+            const inventoryDays = sales > 0 ? (stock / sales) * 365 : 0;
+            const debtorDays = sales > 0 ? (debtors / sales) * 365 : 0;
+            const creditorDays = sales > 0 ? (creditors / sales) * 365 : 0;
+            const wcCycle = debtorDays + inventoryDays - creditorDays;
+
+            return {
+                sales, np, stock, debtors, creditors, termLoanAmt,
+                gpPercent, npPercent, currentRatio, inventoryDays, debtorDays, creditorDays, wcCycle,
+                ca, cl, industry, specific
+            };
+        }
+
+        function getBusinessModelRating(ratios) {
+            const np = ratios.npPercent;
+            const currentRatio = ratios.currentRatio;
+            const wcCycle = ratios.wcCycle;
+            const termLoan = ratios.termLoanAmt;
+            const sales = ratios.sales;
+
+            let rating = "Good – Margin Stable but Capital Intensive";
+            let ratingClass = "rating-good";
+            let narration = "Manufacturing model demonstrates stable revenue base. However, margin improvement and better inventory turnover will strengthen return on capital.";
+
+            if (np < 3) {
+                rating = "Needs Improvement – Low Profitability";
+                ratingClass = "rating-poor";
+                narration = "Profit margins are thin compared to industry peers. Consider cost optimization or product mix revision.";
+            } else if (np >= 3 && np < 7) {
+                rating = "Average – Acceptable Margin";
+                ratingClass = "rating-average";
+                narration = "Margins are within acceptable range but headroom for improvement exists through operational efficiencies.";
+            } else if (np >= 7) {
+                rating = "Good – Healthy Margin";
+                ratingClass = "rating-good";
+                narration = "Profitability is robust. Business model appears resilient with strong bottom line.";
+            }
+
+            if (termLoan > sales * 0.5 && sales > 0) {
+                narration += " High term loan relative to sales may strain liquidity.";
+                if (ratingClass === "rating-good") ratingClass = "rating-average";
+            }
+            if (currentRatio < 1.1) {
+                narration += " Current ratio is below comfort zone, indicating potential liquidity pressure.";
+                if (ratingClass === "rating-good") ratingClass = "rating-average";
+            }
+            if (wcCycle > 150) {
+                narration += " Extended working capital cycle ties up funds.";
+            }
+
+            return { rating, ratingClass, narration };
+        }
+
+        function getWcCommentary(ratios) {
+            const cycle = ratios.wcCycle;
+            let commentary = `Working capital cycle is ${cycle.toFixed(0)} days. `;
+            if (cycle > 120) commentary += "It is on the higher side due to extended inventory holding or receivables.";
+            else if (cycle > 80) commentary += "Moderate, but opportunities to optimize exist.";
+            else commentary += "Efficient working capital management.";
+
+            let suggestion = "💡 <strong>Suggestion:</strong> ";
+            if (ratios.industry === "Manufacturing") {
+                suggestion += "Detail manufacturing stages (RM/WIP/FG breakup). Improve turnover of finished goods. ";
+                if (ratios.specific.toLowerCase().includes("garment")) {
+                    suggestion += "<em>Justification:</em> Under readymade garments industry, procurement of various fabrics and colour variations increases inventory holding.";
+                } else {
+                    suggestion += "<em>Justification:</em> Manufacturing often requires buffer stock for raw materials. Consider just-in-time procurement.";
+                }
+            } else {
+                suggestion += "Review debtor and creditor policies to shorten cash conversion cycle.";
+            }
+            return { commentary, suggestion };
+        }
+
+        function renderRatioTable(ratios) {
+            const benchmarks = {
+                np: { value: 8, comment: "Slightly low" },
+                cr: { value: 1.33, comment: "Below ideal" },
+                wc: { value: 90, comment: "High" }
+            };
+            const rows = [
+                { label: "Net Profit %", value: ratios.npPercent.toFixed(2) + "%", bench: benchmarks.np.value + "%", comment: ratios.npPercent < benchmarks.np.value ? "Below benchmark" : "Meets/Exceeds" },
+                { label: "Gross Profit % (est.)", value: ratios.gpPercent.toFixed(2) + "%", bench: "—", comment: "Estimated based on industry" },
+                { label: "Current Ratio", value: ratios.currentRatio.toFixed(2), bench: benchmarks.cr.value.toFixed(2), comment: ratios.currentRatio < benchmarks.cr.value ? "Below ideal" : "Adequate" },
+                { label: "Inventory Days", value: ratios.inventoryDays.toFixed(0) + " days", bench: "—", comment: "" },
+                { label: "Debtor Days", value: ratios.debtorDays.toFixed(0) + " days", bench: "—", comment: "" },
+                { label: "Creditor Days", value: ratios.creditorDays.toFixed(0) + " days", bench: "—", comment: "" },
+                { label: "WC Cycle (days)", value: ratios.wcCycle.toFixed(0) + " days", bench: benchmarks.wc.value + " days", comment: ratios.wcCycle > benchmarks.wc.value ? "High" : "OK" }
+            ];
+            document.getElementById('ratioBody').innerHTML = rows.map(r => `<tr><td>${r.label}</td><td>${r.value}</td><td>${r.bench}</td><td>${r.comment}</td></tr>`).join('');
+        }
+
+        function generateQueries(ratios) {
+            const queries = [];
+            if (ratios.npPercent < 5) {
+                queries.push("🔹 Justify low profitability trend (NP% below 5%).");
+            }
+            if (ratios.wcCycle > 120) {
+                queries.push("🔹 Explain extended operating cycle (>120 days). Provide stage-wise breakup.");
+            }
+            if (ratios.termLoanAmt > 0 && ratios.sales > 0) {
+                if (ratios.termLoanAmt > ratios.sales * 0.3) {
+                    queries.push("🔹 Term loan is significant relative to sales. Clarify repayment comfort and cash flow coverage.");
+                } else {
+                    queries.push("🔹 Provide repayment track record and comfort for existing term loan.");
+                }
+            }
+            if (ratios.currentRatio < 1.2) {
+                queries.push("🔹 Current ratio below 1.2 – how does business manage short-term obligations?");
+            }
+            if (queries.length === 0) queries.push("✅ No critical queries – financials appear balanced.");
+            return queries;
+        }
+
+        function generateDraftReply(query, ratios) {
+            const templates = {
+                "low profitability": `Despite moderate sales, our net profit is impacted by [reason]. We are implementing cost controls and renegotiating supplier contracts to improve margins by 2% over next year.`,
+                "extended operating cycle": `Our operating cycle is driven by [inventory type] holding. In the ${ratios.specific} industry, we maintain higher stock due to [seasonal/raw material] reasons. We plan to reduce by optimizing procurement.`,
+                "term loan": `The existing term loan is serviced regularly from operating cash flows. Average monthly repayment is ₹X lakhs, covered by net surplus.`,
+                "current ratio": `We manage liquidity through unutilized bank limits and prompt collections. Current ratio will improve with planned debtor reduction.`
+            };
+            let reply = "Draft reply: ";
+            if (query.includes("profitability")) reply += templates["low profitability"];
+            else if (query.includes("operating cycle") || query.includes("extended")) reply += templates["extended operating cycle"];
+            else if (query.includes("term loan")) reply += templates["term loan"];
+            else if (query.includes("current ratio")) reply += templates["current ratio"];
+            else reply += "We are examining the matter and will submit details shortly.";
+            return reply;
+        }
+
+        function populateReport() {
+            const ratios = calculateRatios();
+
+            const modelRating = getBusinessModelRating(ratios);
+            const ratingBadge = document.getElementById('ratingBadge');
+            ratingBadge.className = modelRating.ratingClass;
+            ratingBadge.innerText = modelRating.rating;
+            document.getElementById('ratingText').innerText = `Business Model: ${modelRating.rating}`;
+            document.getElementById('ratingNarration').innerText = modelRating.narration;
+
+            const existingCommentary = document.getElementById('existingCommentary');
+            const existingRadio = document.querySelector('input[name="existingLimit"]:checked');
+            if (existingRadio && existingRadio.value !== 'none') {
+                const utilisation = document.getElementById('utilisation').value;
+                if (utilisation.includes('High')) {
+                    existingCommentary.innerText = '⚠️ High utilisation of existing limit indicates dependency on bank funding. Proposal must justify enhancement requirement.';
+                } else if (utilisation.includes('Moderate')) {
+                    existingCommentary.innerText = '⚠️ Moderate utilisation – enhancement must align with turnover growth.';
+                } else {
+                    existingCommentary.innerText = 'Low utilisation – reassess limit requirement.';
+                }
+            } else {
+                existingCommentary.innerText = 'First-time working capital request – documentation strength becomes critical.';
+            }
+
+            const wcMetrics = document.getElementById('wcMetrics');
+            wcMetrics.innerHTML = `
+                <span class="metric-item">📥 Receivable: ${ratios.debtorDays.toFixed(0)} days</span>
+                <span class="metric-item">📦 Inventory: ${ratios.inventoryDays.toFixed(0)} days</span>
+                <span class="metric-item">💳 Payable: ${ratios.creditorDays.toFixed(0)} days</span>
+                <span class="metric-item">⚖️ Net Op. Cycle: ${ratios.wcCycle.toFixed(0)} days</span>
+            `;
+            const wc = getWcCommentary(ratios);
+            document.getElementById('wcCommentary').innerText = wc.commentary;
+            document.getElementById('wcSuggestion').innerHTML = wc.suggestion;
+
+            renderRatioTable(ratios);
+
+            const queries = generateQueries(ratios);
+            const queryContainer = document.getElementById('queryContainer');
+            queryContainer.innerHTML = '';
+            queries.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'query-item';
+                div.innerHTML = `
+                    <div class="query-question">${q}</div>
+                    <button class="btn-outline reply-toggle" data-index="${idx}" style="margin-top:0.5rem; padding:0.4rem 1rem; border-radius:40px; background:white; border:1px solid #1e6f9f; color:#1e6f9f;"><i class="fa fa-robot"></i> Generate Draft Reply</button>
+                    <div id="reply-${idx}" class="reply-box hidden"></div>
+                `;
+                queryContainer.appendChild(div);
+            });
+
+            document.querySelectorAll('.reply-toggle').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const idx = this.dataset.index;
+                    const queryText = queries[idx];
+                    const replyDiv = document.getElementById(`reply-${idx}`);
+                    if (replyDiv.classList.contains('hidden')) {
+                        const draft = generateDraftReply(queryText, ratios);
+                        replyDiv.innerText = draft;
+                        replyDiv.classList.remove('hidden');
+                        this.innerHTML = '<i class="fa fa-robot"></i> Regenerate Draft Reply';
+                    } else {
+                        const draft = generateDraftReply(queryText, ratios);
+                        replyDiv.innerText = draft;
+                    }
+                });
+            });
+
+            const docList = document.getElementById('docList');
+            docList.innerHTML = `
+                <li>3 years financial statements</li>
+                <li>GST returns</li>
+                <li>6–12 month bank statement</li>
+                <li>Debtor ageing</li>
+                <li>Stock statement</li>
+                ${existingRadio && existingRadio.value !== 'none' ? '<li>Existing limit sanction letter</li><li>Utilisation trend</li>' : ''}
+                ${document.getElementById('seasonal').value === 'High' ? '<li>Monthly sales trend</li>' : ''}
+            `;
+        }
+    })();
+</script>
+</body>
+</html>
