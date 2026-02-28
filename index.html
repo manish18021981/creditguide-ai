@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreditGuide AI · Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: #f0f5fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        .prototype-container {
+            max-width: 720px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px -10px rgba(0,30,60,0.25);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(145deg, #0b2e4a, #123b5e);
+            color: white;
+            padding: 1.8rem 2rem;
+        }
+        .header h1 {
+            font-weight: 600;
+            font-size: 1.9rem;
+            letter-spacing: -0.01em;
+        }
+        .header p {
+            opacity: 0.85;
+            margin-top: 0.3rem;
+            font-size: 1rem;
+        }
+        .step-indicator {
+            display: flex;
+            background: #eef2f7;
+            padding: 0.75rem 2rem;
+            gap: 1.5rem;
+            border-bottom: 1px solid #d9e2ec;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4a5f73;
+        }
+        .step.active {
+            color: #0f3b5e;
+            font-weight: 700;
+        }
+        .step .number {
+            background: #cfddee;
+            color: #1f3a57;
+            width: 26px;
+            height: 26px;
+            border-radius: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .step.active .number {
+            background: #0f3b5e;
+            color: white;
+        }
+        .screen {
+            padding: 2rem;
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: #0b2e4a;
+        }
+        .section-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.8rem 0;
+            color: #1e4a6d;
+            border-left: 5px solid #1e4a6d;
+            padding-left: 0.75rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            color: #2c3e50;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid #cbd6e3;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            background: white;
+            transition: 0.15s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1e6f9f;
+            box-shadow: 0 0 0 3px rgba(20, 88, 140, 0.15);
+        }
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #f8fafd;
+            padding: 0.7rem 1rem;
+            border-radius: 40px;
+            border: 1px solid #dde5ef;
+        }
+        .radio-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 400;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        .conditional {
+            background: #f4f9ff;
+            border-radius: 24px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0 0.5rem 0;
+            border: 1px solid #c2d9f0;
+        }
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            gap: 1rem;
+        }
+        button {
+            background: white;
+            border: 1px solid #1e6f9f;
+            color: #1e6f9f;
+            padding: 0.8rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button.primary {
+            background: #1e6f9f;
+            color: white;
+            border: none;
+            box-shadow: 0 8px 16px -6px #1e6f9f80;
+        }
+        button.primary:hover {
+            background: #135b84;
+        }
+        button:hover {
+            background: #e3effa;
+        }
+        .report-card {
+            background: #f9fcff;
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 1px solid #cfe2f5;
+        }
+        .badge {
+            display: inline-block;
+            background: #ffd966;
+            padding: 0.25rem 1rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.02em;
+            color: #3d2f00;
+            margin-bottom: 0.5rem;
+        }
+        .badge.green {
+            background: #c5e0b4;
+            color: #1f4f1f;
+        }
+        .metric-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem 2rem;
+            margin: 0.5rem 0 1rem 0;
+        }
+        .metric-item {
+            background: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            box-shadow: 0 2px 6px #d0e0f0;
+            font-weight: 500;
+        }
+        hr {
+            border: none;
+            border-top: 2px dashed #bdd6ec;
+            margin: 1.5rem 0;
+        }
+        .small-note {
+            font-size: 0.85rem;
+            color: #4a6f8c;
+            margin-top: 0.3rem;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0.5rem;
+        }
+        ul li {
+            padding: 0.3rem 0 0.3rem 1.5rem;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%231e6f9f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>') left center no-repeat;
+            background-size: 16px;
+        }
+        footer {
+            background: #f2f7fd;
+            padding: 1rem 2rem;
+            text-align: center;
+            color: #6a7f99;
+            font-size: 0.85rem;
+            border-top: 1px solid #d2e2f2;
+        }
+    </style>
+</head>
+<body>
+<div class="prototype-container">
+    <div class="header">
+        <h1>🤝 CreditGuide AI</h1>
+        <p>MSME loan readiness · instant intelligence</p>
+    </div>
+
+    <!-- step indicator (static for demo) -->
+    <div class="step-indicator">
+        <div class="step active" id="step1-label"><span class="number">1</span> Business intro</div>
+        <div class="step" id="step2-label"><span class="number">2</span> Snapshot</div>
+        <div class="step" id="step3-label"><span class="number">3</span> Operating</div>
+        <div class="step" id="step4-label"><span class="number">4</span> Report</div>
+    </div>
+
+    <!-- SCREEN 1 – BUSINESS INTRODUCTION -->
+    <div class="screen active" id="screen1">
+        <h2>Welcome to CreditGuide AI</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem; color: #205b84;">“Sabse pehle humein aapke business ke baare mein batayein.”</p>
+        <label for="businessDesc">Describe your business</label>
+        <input type="text" id="businessDesc" placeholder="e.g. I run a textile manufacturing unit producing cotton fabric." value="I run a textile manufacturing unit producing cotton fabric." style="margin-bottom: 2rem;">
+        <div class="btn-row" style="justify-content: flex-end;">
+            <button class="primary" onclick="nextScreen(1)">Continue →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2 – BUSINESS SNAPSHOT (STRUCTURED DATA) -->
+    <div class="screen" id="screen2">
+        <h2>📋 Business snapshot</h2>
+        <div class="section-title">📍 Business details</div>
+        <div class="form-grid">
+            <div>
+                <label>Business Location</label>
+                <input type="text" placeholder="City, State" value="Gandhinagar, Gujarat">
+            </div>
+            <div>
+                <label>Vintage (years)</label>
+                <input type="number" value="7">
+            </div>
+            <div class="full-width">
+                <label>Average Monthly Turnover (₹)</label>
+                <input type="text" placeholder="e.g. 12,50,000" value="18,40,000">
+            </div>
+        </div>
+
+        <div class="section-title">🏦 Existing Banking Exposure</div>
+        <div>
+            <label>Existing Working Capital Limit?</label>
+            <div class="radio-group" id="existingLimitGroup">
+                <label><input type="radio" name="existingLimit" value="none" checked onchange="toggleExistingLimitFields()"> No existing limit</label>
+                <label><input type="radio" name="existingLimit" value="sameBank" onchange="toggleExistingLimitFields()"> Yes – with same bank</label>
+                <label><input type="radio" name="existingLimit" value="otherBank" onchange="toggleExistingLimitFields()"> Yes – with other bank</label>
+            </div>
+        </div>
+        <div class="conditional" id="existingLimitFields" style="display: none;">
+            <div class="form-grid">
+                <div>
+                    <label>Existing Limit Amount (₹)</label>
+                    <input type="text" value="45,00,000">
+                </div>
+                <div>
+                    <label>Utilisation Level</label>
+                    <select>
+                        <option>Low (<50%)</option>
+                        <option selected>Moderate (50–75%)</option>
+                        <option>High (>75%)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">📌 Proposed Requirement</div>
+        <div class="form-grid">
+            <div>
+                <label>Loan Type</label>
+                <select>
+                    <option>Working Capital</option>
+                    <option>Enhancement</option>
+                    <option>New Limit</option>
+                </select>
+            </div>
+            <div>
+                <label>Proposed Limit Amount (₹)</label>
+                <input type="text" value="75,00,000">
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button onclick="prevScreen(2)">← Back</button>
+            <button class="primary" onclick="nextScreen(2)">Continue →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3 – OPERATING & CREDIT BEHAVIOUR DETAILS -->
+    <div class="screen" id="screen3">
+        <h2>⚙️ Operating & credit behaviour</h2>
+        <div class="form-grid">
+            <div><label>Avg Collection Period (days)</label><input type="number" value="90"></div>
+            <div><label>Inventory Holding Period (days)</label><input type="number" value="75"></div>
+            <div><label>Raw Material Purchase Terms</label><input type="text" value="30 days credit"></div>
+            <div><label>Seasonality</label><input type="text" value="Peak in festive season"></div>
+            <div><label>Existing EMI / Term Loans</label><input type="text" value="₹ 1.2L/month (auto loan)"></div>
+            <div><label>Primary Repayment Source</label><input type="text" value="Business cash flow"></div>
+        </div>
+
+        <div class="btn-row">
+            <button onclick="prevScreen(3)">← Back</button>
+            <button class="primary" onclick="generateReport()">Generate Proposal Readiness Report →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 4 – STRUCTURED PROPOSAL READINESS REPORT (dynamic content example) -->
+    <div class="screen" id="screen4">
+        <h2>📄 Proposal Readiness Report</h2>
+        <div class="report-card">
+            <span class="badge green">🔵 SECTION 1 – Business Model Commentary</span>
+            <div style="display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0 1rem;">
+                <span style="background: #ffd966; padding: 0.3rem 1rem; border-radius: 30px; font-weight: 700;">GOOD</span>
+                <span style="color: #1e3b5c;">Business Model: <strong>GOOD</strong></span>
+            </div>
+            <p style="background: white; border-radius: 16px; padding: 1rem;">“The textile manufacturing model demonstrates stable demand with established operations. Margin improvement through cost optimisation and broader customer diversification will strengthen sustainability.”</p>
+            <p class="small-note" style="margin-top: 0.5rem;">⚠️ High utilisation of existing limit indicates dependency on bank funding. Proposal must justify enhancement requirement.</p>
+        </div>
+
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 2 – Sales & Working Capital Analysis</span>
+            <div class="metric-row">
+                <span class="metric-item">📥 Receivable: 90 days</span>
+                <span class="metric-item">📦 Inventory: 75 days</span>
+                <span class="metric-item">💳 Payable: 30 days</span>
+                <span class="metric-item">⚖️ Net Op. Cycle: 135 days</span>
+            </div>
+            <p>“Extended working capital cycle supports need for bank funding. However, receivable cycle above industry average may invite clarification.”</p>
+            <p class="small-note">New limit proposal requires detailed cash flow justification.</p>
+        </div>
+
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 3 – Existing Limit Behaviour Analysis</span>
+            <p>“Current utilisation level indicates moderate stress. Enhancement request must align with turnover growth.”</p>
+        </div>
+
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 4 – Likely Bank Queries</span>
+            <ul>
+                <li>Justify receivable period (90 days vs industry)</li>
+                <li>Provide debtor ageing report</li>
+                <li>Explain inventory management practices</li>
+                <li>Clarify enhancement basis with turnover growth</li>
+            </ul>
+        </div>
+
+        <div class="report-card">
+            <span class="badge">🔵 SECTION 5 – Required Documents Checklist</span>
+            <ul>
+                <li>3 years financial statements</li>
+                <li>GST returns</li>
+                <li>6–12 month bank statement</li>
+                <li>Debtor ageing</li>
+                <li>Stock statement</li>
+                <li>Existing limit sanction letter (enhancement case)</li>
+                <li>Utilisation trend</li>
+                <li>Monthly sales trend (high seasonality)</li>
+            </ul>
+        </div>
+
+        <div class="btn-row" style="justify-content: flex-start;">
+            <button onclick="prevScreen(4)">← Edit inputs</button>
+            <button class="primary" onclick="window.location.reload()">New assessment</button>
+        </div>
+    </div>
+
+    <footer>
+        ⚡ Prototype for AI for Bharat Hackathon · dynamic fields & commentary
+    </footer>
+</div>
+
+<script>
+    // Simple screen navigation
+    let currentScreen = 1;
+    const screens = [null, 'screen1', 'screen2', 'screen3', 'screen4'];
+    const stepLabels = [null, 'step1-label', 'step2-label', 'step3-label', 'step4-label'];
+
+    function showScreen(n) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screens[n]).classList.add('active');
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById(stepLabels[n]).classList.add('active');
+        currentScreen = n;
+    }
+
+    function nextScreen(from) {
+        if (from === 1) showScreen(2);
+        else if (from === 2) showScreen(3);
+        else if (from === 3) showScreen(4); // after clicking continue from screen 3, but we also have generate button
+    }
+
+    function prevScreen(from) {
+        if (from === 2) showScreen(1);
+        else if (from === 3) showScreen(2);
+        else if (from === 4) showScreen(3);
+    }
+
+    function generateReport() {
+        // In a full prototype this would collect data; here we simply go to screen 4.
+        showScreen(4);
+    }
+
+    // conditional fields for existing limit
+    function toggleExistingLimitFields() {
+        const radios = document.getElementsByName('existingLimit');
+        let selected = null;
+        for (let r of radios) if (r.checked) selected = r.value;
+        const fieldBlock = document.getElementById('existingLimitFields');
+        if (selected === 'none') {
+            fieldBlock.style.display = 'none';
+        } else {
+            fieldBlock.style.display = 'block';
+        }
+    }
+
+    // initial call to set correct visibility based on default radio (none)
+    window.onload = function() {
+        toggleExistingLimitFields();
+    };
+</script>
+</body>
+</html>
