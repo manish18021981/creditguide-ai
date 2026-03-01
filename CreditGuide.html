@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CreditGuide AI · MSME Loan Readiness Platform</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    :root {
+      --navy-dark: #0a1628;
+      --navy: #0f2744;
+      --navy-light: #1a3a5c;
+      --gold: #c9a227;
+      --gold-light: #e8d48a;
+      --gold-dark: #9a7b1a;
+      --white: #ffffff;
+      --grey-light: #f4f6f9;
+      --grey: #e8ecf2;
+      --grey-dark: #8a9bb5;
+      --text-dark: #1a2639;
+      --text-muted: #5a6a7e;
+      --success: #1a8754;
+      --warning: #c9a227;
+      --danger: #b8363f;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--grey-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ============ HEADER ============ */
+    .header {
+      background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-light) 100%);
+      padding: 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      position: relative;
+    }
+
+    .header::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold), var(--gold-dark));
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* LOGO */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(201,162,39,0.3);
+    }
+
+    .logo-icon svg {
+      width: 28px;
+      height: 28px;
+      fill: var(--navy-dark);
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .logo-tagline {
+      font-size: 0.75rem;
+      color: var(--gold-light);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.08);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: var(--grey);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .trust-badge svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--gold);
+    }
+
+    /* HEADER NAV */
+    .header-nav {
+      display: flex;
+      justify-content: center;
+      padding: 0.75rem 2rem;
+    }
+
+    .progress-bar {
+      display: flex;
+      gap: 0;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50px;
+      padding: 6px;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      border-radius: 50px;
+      transition: all 0.3s;
+    }
+
+    .progress-step .num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .progress-step.active {
+      background: rgba(201,162,39,0.2);
+      color: var(--gold-light);
+    }
+
+    .progress-step.active .num {
+      background: var(--gold);
+      color: var(--navy-dark);
+    }
+
+    .progress-step.completed {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .progress-step.completed .num {
+      background: var(--success);
+      color: white;
+    }
+
+    /* ============ CONTAINER ============ */
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* ============ SCREEN ============ */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============ CARD ============ */
+    .card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0,20,50,0.08);
+      border: 1px solid var(--grey);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--navy), var(--gold), var(--navy));
+    }
+
+    /* ============ STEP HEADER ============ */
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--grey);
+    }
+
+    .step-badge {
+      background: var(--navy);
+      color: var(--gold-light);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .step-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* ============ DISCLAIMER ============ */
+    .disclaimer {
+      background: linear-gradient(135deg, #fef9e7 0%, #fdf6e3 100%);
+      border-left: 4px solid var(--gold);
+      padding: 1rem 1.25rem;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.85rem;
+      color: var(--gold-dark);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .disclaimer svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--gold);
+      flex-shrink: 0;
+    }
+
+    /* ============ SECTION ============ */
+    .section-head {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-head .qnum {
+      background: var(--grey);
+      color: var(--navy-light);
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .section-caption {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed var(--grey);
+    }
+
+    /* ============ OPTION GRID ============ */
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .option-grid input[type="radio"] {
+      display: none;
+    }
+
+    .option-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--grey-light);
+      border: 2px solid var(--grey);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option-card:hover {
+      border-color: var(--navy-light);
+      background: var(--white);
+      color: var(--navy);
+    }
+
+    input[type="radio"]:checked + .option-card {
+      border-color: var(--navy);
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: var(--white);
+      box-shadow: 0 6px 20px rgba(15,39,68,0.25);
+    }
+
+    /* ============ INLINE GROUP ============ */
+    .inline-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .inline-group .radio-item {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .inline-group input[type="radio"] {
+      display: none;
+    }
+
+    /* ============ LIST OPTIONS ============ */
+    .list-options {
+      margin-bottom: 2rem;
+    }
+
+    .list-option {
+      margin-bottom: 0.6rem;
+    }
+
+    .list-option input[type="radio"] {
+      display: none;
+    }
+
+    .list-option label {
+      display: block;
+      padding: 0.9rem 1.25rem;
+      background: var(--grey-light);
+      border: 2px solid var(--grey);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      transition: all 0.2s;
+    }
+
+    .list-option label:hover {
+      border-color: var(--navy-light);
+      background: var(--white);
+    }
+
+    .list-option input[type="radio"]:checked + label {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: var(--white);
+    }
+
+    .list-option input[type="radio"]:checked + label::before {
+      content: "✓ ";
+      font-weight: 700;
+    }
+
+    /* ============ INPUT FIELDS ============ */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .form-label span {
+      font-weight: 400;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--grey);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: var(--grey-light);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--navy);
+      background: var(--white);
+      box-shadow: 0 0 0 4px rgba(15,39,68,0.1);
+    }
+
+    .form-input::placeholder {
+      color: var(--grey-dark);
+    }
+
+    /* ============ BUTTONS ============ */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+      border: none;
+      color: var(--white);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 20px rgba(10,22,40,0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(10,22,40,0.4);
+    }
+
+    .btn-secondary {
+      background: var(--white);
+      border: 2px solid var(--navy);
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.9rem 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary:hover {
+      background: var(--grey-light);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      border: none;
+      color: var(--navy-dark);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 20px rgba(201,162,39,0.4);
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(201,162,39,0.5);
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      gap: 1rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid var(--grey);
+    }
+
+    .button-row.center {
+      justify-content: center;
+    }
+
+    /* ============ REPORT STYLES ============ */
+    .report-section {
+      background: var(--grey-light);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--grey);
+    }
+
+    .report-section h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .report-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--grey);
+    }
+
+    .report-row:last-child {
+      border-bottom: none;
+    }
+
+    .report-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .report-value {
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .report-value.highlight {
+      color: var(--gold-dark);
+      font-size: 1.1rem;
+    }
+
+    /* RATING TAGS */
+    .rating-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .rating-green {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+      border: 2px solid #28a745;
+    }
+
+    .rating-amber {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+      color: #856404;
+      border: 2px solid var(--gold);
+    }
+
+    .rating-red {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      color: #721c24;
+      border: 2px solid #dc3545;
+    }
+
+    /* CHART BOX */
+    .chart-box {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--grey);
+    }
+
+    .chart-box h4 {
+      font-size: 0.95rem;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    /* ============ FOOTER ============ */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.85rem;
+      color: var(--grey-dark);
+      border-top: 1px solid var(--grey);
+      margin-top: 2rem;
+    }
+
+    .footer-brand {
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 650px) {
+      .header-top {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .header-badges {
+        display: none;
+      }
+
+      .progress-step span:not(.num) {
+        display: none;
+      }
+
+      .option-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .inline-group {
+        flex-direction: column;
+      }
+
+      .button-row {
+        flex-direction: column;
+      }
+
+      .btn-primary, .btn-secondary, .btn-gold {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .card {
+        padding: 1.25rem;
+      }
+    }
+
+    /* PRINT STYLES */
+    @media print {
+      .header, .progress-bar, .button-row, .footer {
+        display: none !important;
+      }
+      .screen {
+        display: block !important;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="header">
+  <div class="header-top">
+    <!-- LOGO -->
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">CreditGuide AI</span>
+        <span class="logo-tagline">MSME Loan Intelligence Platform</span>
+      </div>
+    </div>
+
+    <!-- TRUST BADGES -->
+    <div class="header-badges">
+      <div class="trust-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        Secure
+      </div>
+      <div class="trust-badge">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Bank-Grade
+      </div>
+      <div class="trust-badge">
+        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
+        Trusted
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS NAV -->
+  <nav class="header-nav">
+    <div class="progress-bar">
+      <div class="progress-step active" id="p1">
+        <span class="num">1</span>
+        <span>Loan Details</span>
+      </div>
+      <div class="progress-step" id="p2">
+        <span class="num">2</span>
+        <span>Business</span>
+      </div>
+      <div class="progress-step" id="p3">
+        <span class="num">3</span>
+        <span>Financials</span>
+      </div>
+      <div class="progress-step" id="p4">
+        <span class="num">4</span>
+        <span>Report</span>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- ============ MAIN CONTAINER ============ -->
+<div class="container">
+
+  <!-- ============ SCREEN 1: LOAN DETAILS ============ -->
+  <div id="screen1" class="screen active">
+    <div class="card">
+      <div class="step-header">
+        <span class="step-badge">Step 1 of 4</span>
+        <span class="step-title">Loan Requirement</span>
+      </div>
+
+      <div class="disclaimer">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        This tool helps you understand how banks evaluate your loan proposal. It does not approve or reject loans.
+      </div>
+
+      <!-- Q1: Purpose -->
+      <div class="section-head">
+        <span class="qnum">Q1</span>
+        What facility are you looking for?
+      </div>
+      <div class="option-grid">
+        <input type="radio" name="purpose" id="purpose1" value="New Working Capital Limit" checked>
+        <label for="purpose1" class="option-card">New Working Capital Limit</label>
+
+        <input type="radio" name="purpose" id="purpose2" value="Enhancement of Existing Limit">
+        <label for="purpose2" class="option-card">Enhancement of Existing Limit</label>
+
+        <input type="radio" name="purpose" id="purpose3" value="Term Loan for Expansion">
+        <label for="purpose3" class="option-card">Term Loan for Expansion</label>
+
+        <input type="radio" name="purpose" id="purpose4" value="Just Exploring">
+        <label for="purpose4" class="option-card">Just Exploring Credit Readiness</label>
+      </div>
+
+      <!-- Q2: Amount -->
+      <div class="section-head">
+        <span class="qnum">Q2</span>
+        What is your approximate requirement?
+      </div>
+      <div class="option-grid">
+        <input type="radio" name="amount" id="amt1" value="Below 50 Lakhs" checked>
+        <label for="amt1" class="option-card">₹ Below 50 Lakhs</label>
+
+        <input type="radio" name="amount" id="amt2" value="50 Lakhs - 2 Cr">
+        <label for="amt2" class="option-card">₹ 50 Lakhs – 2 Cr</label>
+
+        <input type="radio" name="amount" id="amt3" value="2 - 5 Cr">
+        <label for="amt3" class="option-card">₹ 2 – 5 Cr</label>
+
+        <input type="radio" name="amount" id="amt4" value="Above 5 Cr">
+        <label for="amt4" class="option-card">₹ Above 5 Cr</label>
+      </div>
+
+      <div class="button-row center">
+        <button class="btn-gold" onclick="goToScreen(2)">Start Business Assessment →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2: BUSINESS ============ -->
+  <div id="screen2" class="screen">
+    <div class="card">
+      <div class="step-header">
+        <span class="step-badge">Step 2 of 4</span>
+        <span class="step-title">Business Profile</span>
+      </div>
+
+      <div class="section-caption">Let's understand your business nature and operational dynamics.</div>
+
+      <!-- Q3: Category -->
+      <div class="section-head">
+        <span class="qnum">Q3</span>
+        Business Category
+      </div>
+      <div class="inline-group">
+        <div class="radio-item">
+          <input type="radio" name="category" id="cat1" value="Manufacturing" checked>
+          <label for="cat1" class="option-card">Manufacturing</label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="category" id="cat2" value="Trading">
+          <label for="cat2" class="option-card">Trading</label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="category" id="cat3" value="Services">
+          <label for="cat3" class="option-card">Services</label>
+        </div>
+      </div>
+
+      <!-- Q4: Industry -->
+      <div class="section-head">
+        <span class="qnum">Q4</span>
+        Industry Type
+      </div>
+      <div class="list-options">
+        <div class="list-option">
+          <input type="radio" name="industry" id="ind1" value="Textile" checked>
+          <label for="ind1">Textile / Garments</label>
+        </div>
+        <div class="list-option">
+          <input type="radio" name="industry" id="ind2" value="Food Processing">
+          <label for="ind2">Food Processing</label>
+        </div>
+        <div class="list-option">
+          <input type="radio" name="industry" id="ind3" value="Engineering">
+          <label for="ind3">Engineering / Fabrication</label>
+        </div>
+        <div class="list-option">
+          <input type="radio" name="industry" id="ind4" value="Trading General">
+          <label for="ind4">Trading General</label>
+        </div>
+        <div class="list-option">
+          <input type="radio" name="industry" id="ind5" value="Others">
+          <label for="ind5">Others</label>
+        </div>
+      </div>
+
+      <!-- Q5: Vintage -->
+      <div class="section-head">
+        <span class="qnum">Q5</span>
+        Business Vintage
+      </div>
+      <div class="list-options">
+        <div class="list-option">
+          <input type="radio" name="vintage" id="vin1" value="Less than 2 years">
+          <label for="vin1">Less than 2 years</label>
+        </div>
+        <div class="list-option">
+          <input type="radio" name="vintage" id="vin2" value="2-5 years">
+          <label for="vin2">2 – 5 years</label>
+        </div>
+        <div class="list-option">
+          <input type="radio" name="vintage" id="vin3" value="5-10 years" checked>
+          <label for="vin3">5 – 10 years</label>
+        </div>
+        <div class="list-option">
+          <input type="radio" name="vintage" id="vin4" value="More than 10 years">
+          <label for="vin4">More than 10 years</label>
+        </div>
+      </div>
+
+      <!-- Q6: Customer -->
+      <div class="section-head">
+        <span class="qnum">Q6</span>
+        Customer Profile
+      </div>
+      <div class="inline-group">
+        <div class="radio-item">
+          <input type="radio" name="customer" id="cust1" value="1-2 Major Buyers">
+          <label for="cust1" class="option-card">1–2 Major Buyers</label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="customer" id="cust2" value="Top 5 Buyers">
+          <label for="cust2" class="option-card">Top 5 Buyers</label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="customer" id="cust3" value="Diversified" checked>
+          <label for="cust3" class="option-card">Diversified</label>
+        </div>
+      </div>
+
+      <!-- Q7: Seasonality -->
+      <div class="section-head">
+        <span class="qnum">Q7</span>
+        Seasonality Pattern
+      </div>
+      <div class="inline-group">
+        <div class="radio-item">
+          <input type="radio" name="season" id="seas1" value="Stable" checked>
+          <label for="seas1" class="option-card">Stable</label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="season" id="seas2" value="Moderate">
+          <label for="seas2" class="option-card">Moderate</label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="season" id="seas3" value="Highly Seasonal">
+          <label for="seas3" class="option-card">Highly Seasonal</label>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn-secondary" onclick="goToScreen(1)">← Back</button>
+        <button class="btn-primary" onclick="goToScreen(3)">Continue to Financials →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 3: FINANCIALS ============ -->
+  <div id="screen3" class="screen">
+    <div class="card">
+      <div class="step-header">
+        <span class="step-badge">Step 3 of 4</span>
+        <span class="step-title">Financial Snapshot</span>
+      </div>
+
+      <div class="section-caption">Enter your financial figures. All values in <strong>₹ Lakhs</strong>.</div>
+
+      <div class="form-group">
+        <label class="form-label">Annual Sales <span>(₹ Lakhs)</span></label>
+        <input type="number" id="sales" class="form-input" placeholder="e.g. 250">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Net Profit <span>(₹ Lakhs)</span></label>
+        <input type="number" id="profit" class="form-input" placeholder="e.g. 18">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Stock / Inventory <span>(₹ Lakhs)</span></label>
+        <input type="number" id="stock" class="form-input" placeholder="e.g. 45">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Debtors / Receivables <span>(₹ Lakhs)</span></label>
+        <input type="number" id="debtors" class="form-input" placeholder="e.g. 30">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Creditors / Payables <span>(₹ Lakhs)</span></label>
+        <input type="number" id="creditors" class="form-input" placeholder="e.g. 20">
+      </div>
+
+      <div class="button-row">
+        <button class="btn-secondary" onclick="goToScreen(2)">← Back</button>
+        <button class="btn-gold" onclick="generateReport()">Generate Bankability Report →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 4: REPORT ============ -->
+  <div id="screen4" class="screen">
+    <div class="card">
+      <div class="step-header">
+        <span class="step-badge">Final Report</span>
+        <span class="step-title">Bankability Assessment</span>
+      </div>
+
+      <div id="reportOutput"></div>
+
+      <!-- CHARTS -->
+      <div class="chart-box">
+        <h4>📊 Working Capital Analysis</h4>
+        <canvas id="wcChart"></canvas>
+      </div>
+
+      <div class="chart-box">
+        <h4>🏦 Drawing Power Breakdown</h4>
+        <canvas id="dpChart"></canvas>
+      </div>
+
+      <div class="button-row">
+        <button class="btn-secondary" onclick="goToScreen(3)">← Edit Data</button>
+        <button class="btn-primary" onclick="window.print()">📄 Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <span class="footer-brand">CreditGuide AI</span> · Powered by Intelligent Credit Analytics<br>
+  © 2025 All Rights Reserved
+</footer>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+// ========== NAVIGATION ==========
+function goToScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen' + n).classList.add('active');
+  
+  for(let i = 1; i <= 4; i++) {
+    const step = document.getElementById('p' + i);
+    step.classList.remove('active', 'completed');
+    if(i < n) step.classList.add('completed');
+    if(i === n) step.classList.add('active');
+  }
+  
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ========== CURRENCY FORMATTER ==========
+function fmt(val) {
+  if(val <= 100) return `₹${val.toFixed(2)} Lakhs`;
+  return `₹${(val/100).toFixed(2)} Cr`;
+}
+
+// ========== INDUSTRY COST ESTIMATION ==========
+function estimatedCost(ind) {
+  const costs = {
+    'Textile': 0.78,
+    'Food Processing': 0.70,
+    'Engineering': 0.72,
+    'Trading General': 0.90,
+    'Others': 0.80
+  };
+  return costs[ind] || 0.80;
+}
+
+// ========== SCORING FUNCTIONS ==========
+function scoreVintage(v) {
+  if(v.includes('More')) return 2;
+  if(v.includes('5-10')) return 1;
+  if(v.includes('2-5')) return 0;
+  return -2;
+}
+
+function scoreCustomer(c) {
+  if(c.includes('Diversified')) return 2;
+  if(c.includes('Top')) return 0;
+  return -2;
+}
+
+function scoreSeason(s) {
+  if(s.includes('Stable')) return 1;
+  if(s.includes('Moderate')) return 0;
+  return -1;
+}
+
+// ========== GENERATE REPORT ==========
+function generateReport() {
+  // Get values
+  let sales = +document.getElementById('sales').value || 100;
+  let profit = +document.getElementById('profit').value || 5;
+  let stock = +document.getElementById('stock').value || 30;
+  let debtors = +document.getElementById('debtors').value || 20;
+  let creditors = +document.getElementById('creditors').value || 15;
+  
+  let industry = document.querySelector('input[name="industry"]:checked').value;
+  let vintage = document.querySelector('input[name="vintage"]:checked').value;
+  let customer = document.querySelector('input[name="customer"]:checked').value;
+  let season = document.querySelector('input[name="season"]:checked').value;
+
+  // Ratios
+  let cost = sales * estimatedCost(industry);
+  let gp = ((sales - cost) / sales) * 100;
+  let np = (profit / sales) * 100;
+  
+  let invDays = (stock / sales) * 365;
+  let recDays = (debtors / sales) * 365;
+  let credDays = (creditors / sales) * 365;
+  let wcCycle = invDays + recDays - credDays;
+  
+  let currentRatio = (stock + debtors) / creditors;
+
+  // Drawing Power
+  let stockElig = stock * 0.75;
+  let debtorElig = (recDays <= 90) ? debtors * 0.75 : 0;
+  let dp = stockElig + debtorElig - creditors;
+  if(dp < 0) dp = 0;
+
+  // WC Requirement
+  let wcReq = sales * 0.20;
+
+  // Scoring
+  let businessScore = scoreVintage(vintage) + scoreCustomer(customer) + scoreSeason(season);
+  let finScore = 0;
+  if(np > 10) finScore += 2;
+  else if(np >= 5) finScore += 1;
+  else finScore -= 1;
+  if(recDays > 120) finScore -= 2;
+  if(invDays > 120) finScore -= 2;
+  
+  let totalScore = businessScore + finScore;
+  let creditScore = Math.min(100, Math.max(0, 50 + (totalScore * 8)));
+  
+  let rating, ratingClass, ratingText;
+  if(creditScore >= 70) {
+    rating = '🟢 GREEN';
+    ratingClass = 'rating-green';
+    ratingText = 'Strong Bankability – High approval probability';
+  } else if(creditScore >= 50) {
+    rating = '🟡 AMBER';
+    ratingClass = 'rating-amber';
+    ratingText = 'Moderate – May require collateral or conditions';
+  } else {
+    rating = '🔴 RED';
+    ratingClass = 'rating-red';
+    ratingText = 'High Risk – Needs significant improvement';
+  }
+
+  // Suggestions
+  let suggestions = [];
+  if(recDays > 90) suggestions.push('Reduce debtor collection period below 90 days');
+  if(invDays > 90) suggestions.push('Optimize inventory holding period');
+  if(np < 5) suggestions.push('Improve profit margins');
+  if(customer.includes('1-2')) suggestions.push('Diversify customer base to reduce concentration risk');
+  if(suggestions.length === 0) suggestions.push('Maintain current performance levels');
+
+  // Output
+  document.getElementById('reportOutput').innerHTML = `
+    <div style="text-align:center; margin-bottom:2rem;">
+      <div class="rating-tag ${ratingClass}">${rating}</div>
+      <p style="margin-top:0.75rem; color:var(--text-muted);">${ratingText}</p>
+    </div>
+
+    <div class="report-section">
+      <h3>⭐ Credit Score</h3>
+      <div class="report-row">
+        <span class="report-label">Final Credit Score</span>
+        <span class="report-value highlight">${creditScore}/100</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Business Score</span>
+        <span class="report-value">${businessScore > 0 ? '+' : ''}${businessScore}</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Financial Score</span>
+        <span class="report-value">${finScore > 0 ? '+' : ''}${finScore}</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>📊 Financial Ratios</h3>
+      <div class="report-row">
+        <span class="report-label">Gross Profit %</span>
+        <span class="report-value">${gp.toFixed(1)}%</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Net Profit %</span>
+        <span class="report-value">${np.toFixed(1)}%</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Current Ratio</span>
+        <span class="report-value">${currentRatio.toFixed(2)}</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>🔄 Working Capital Cycle</h3>
+      <div class="report-row">
+        <span class="report-label">Inventory Days</span>
+        <span class="report-value">${invDays.toFixed(0)} days</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Debtor Days</span>
+        <span class="report-value">${recDays.toFixed(0)} days</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Creditor Days</span>
+        <span class="report-value">${credDays.toFixed(0)} days</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Net WC Cycle</span>
+        <span class="report-value highlight">${wcCycle.toFixed(0)} days</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>🏦 Drawing Power (DP)</h3>
+      <div class="report-row">
+        <span class="report-label">Stock Eligible (75%)</span>
+        <span class="report-value">${fmt(stockElig)}</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Debtors Eligible (75%)</span>
+        <span class="report-value">${fmt(debtorElig)}</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Less: Creditors</span>
+        <span class="report-value">${fmt(creditors)}</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Net Drawing Power</span>
+        <span class="report-value highlight">${fmt(dp)}</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>💰 WC Requirement</h3>
+      <div class="report-row">
+        <span class="report-label">Estimated WC Need (20% of Sales)</span>
+        <span class="report-value highlight">${fmt(wcReq)}</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>💡 Recommendations</h3>
+      ${suggestions.map(s => `<div class="report-row"><span class="report-label">•</span><span class="report-value" style="font-weight:500;">${s}</span></div>`).join('')}
+    </div>
+  `;
+
+  // Render Charts
+  renderCharts(invDays, recDays, credDays, wcCycle, stockElig, debtorElig, creditors, dp);
+
+  goToScreen(4);
+}
+
+// ========== CHARTS ==========
+function renderCharts(invDays, recDays, credDays, wcCycle, stockElig, debtorElig, creditors, dp) {
+  // WC Chart
+  new Chart(document.getElementById('wcChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Inventory Days', 'Debtor Days', 'Creditor Days', 'WC Cycle'],
+      datasets: [{
+        label: 'Days',
+        data: [invDays, recDays, credDays, wcCycle],
+        backgroundColor: ['#0f2744', '#1a5c9e', '#c9a227', '#28a745']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // DP Chart
+  new Chart(document.getElementById('dpChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Stock Eligible', 'Debtors Eligible', 'Creditors', 'Net DP'],
+      datasets: [{
+        label: '₹ Lakhs',
+        data: [stockElig, debtorElig, creditors, dp],
+        backgroundColor: ['#1a5c9e', '#28a745', '#dc3545', '#c9a227']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+</script>
+
+</body>
+</html>
