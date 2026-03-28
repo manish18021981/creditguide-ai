@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CreditGuide AI — MSME Credit Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#020912;--bg2:#030e1a;--panel:#040f1e;
+  --cyan:#00e5ff;--cyan2:#00ffee;--cyan3:rgba(0,229,255,0.08);
+  --green:#00ff88;--green2:#39ff14;
+  --blue:#0066ff;--blue2:#004de6;
+  --gold:#ffd700;--gold2:#ffaa00;
+  --red:#ff3355;--purple:#7c3aed;
+  --white:#cde8ff;--muted:#4a7a9b;--muted2:#2a4a6b;
+  --border:rgba(0,229,255,0.15);--border2:rgba(0,229,255,0.08);
+  --glow:rgba(0,229,255,0.4);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--white);overflow-x:hidden;cursor:none;}
+
+/* CURSOR */
+#cursor{position:fixed;width:8px;height:8px;background:var(--cyan);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .15s,height .15s;}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(0,229,255,0.6);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .1s ease;}
+#cursor-dot{position:fixed;width:4px;height:4px;background:var(--cyan2);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);}
+
+/* NEURAL CANVAS */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* SCANLINE OVERLAY */
+.scanlines{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+
+/* GRID */
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+  background-size:50px 50px;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;height:66px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 5%;
+  background:rgba(2,9,18,0.92);backdrop-filter:blur(30px);
+  border-bottom:1px solid var(--border);}
+nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.4;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-box{width:36px;height:36px;border-radius:8px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+  box-shadow:0 0 20px rgba(0,229,255,0.4);}
+.logo-box::before{content:'';position:absolute;inset:0;background:linear-gradient(45deg,transparent 30%,rgba(255,255,255,.2) 50%,transparent 70%);animation:lshine 3s infinite;}
+@keyframes lshine{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.logo-text{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;letter-spacing:1px;color:var(--white);}
+.logo-text span{color:var(--cyan);}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;letter-spacing:.5px;
+  transition:color .2s;font-family:'Rajdhani',sans-serif;text-transform:uppercase;font-weight:600;}
+.nav-links a:hover{color:var(--cyan);}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.hud-status{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--green);border:1px solid rgba(0,255,136,.2);padding:.3rem .7rem;border-radius:4px;background:rgba(0,255,136,.05);}
+.hud-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,136,.4);}50%{opacity:.5;box-shadow:0 0 0 4px rgba(0,255,136,0);}}
+.btn-cta{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:1px;text-transform:uppercase;
+  padding:.52rem 1.4rem;border-radius:6px;border:1px solid var(--cyan);background:rgba(0,229,255,.08);
+  color:var(--cyan);cursor:none;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn-cta:hover{background:rgba(0,229,255,.18);box-shadow:0 0 20px rgba(0,229,255,.3);}
+
+/* TABS */
+.tabs{position:sticky;top:66px;z-index:200;display:flex;justify-content:center;gap:2px;padding:8px 5%;
+  background:rgba(2,9,18,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border2);}
+.tab{padding:.4rem 1.3rem;border-radius:5px;border:1px solid transparent;
+  font-family:'Rajdhani',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  cursor:none;background:transparent;color:var(--muted);transition:all .2s;}
+.tab.active{background:rgba(0,229,255,.1);color:var(--cyan);border-color:rgba(0,229,255,.3);box-shadow:0 0 10px rgba(0,229,255,.1);}
+.tab:hover:not(.active){color:var(--white);background:rgba(255,255,255,.03);}
+
+/* PAGES */
+.page{display:none;position:relative;z-index:2;}
+.page.active{display:block;}
+
+/* TICKER */
+.ticker-wrap{overflow:hidden;white-space:nowrap;border-bottom:1px solid var(--border2);padding:.6rem 0;
+  background:rgba(0,229,255,.03);position:relative;z-index:2;}
+.ticker{display:inline-flex;gap:3rem;animation:tick 40s linear infinite;
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);}
+.ticker i{color:var(--cyan);font-style:normal;margin-right:.3rem;}
+@keyframes tick{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:9rem 5% 5rem;position:relative;overflow:hidden;}
+.hero-aura{position:absolute;top:-20%;left:50%;transform:translateX(-50%);
+  width:1200px;height:700px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,102,255,.2) 0%,rgba(0,229,255,.06) 40%,transparent 70%);
+  pointer-events:none;animation:breathe 6s ease-in-out infinite;}
+@keyframes breathe{0%,100%{opacity:.7;transform:translateX(-50%) scale(1);}50%{opacity:1;transform:translateX(-50%) scale(1.05);}}
+.hero-aura2{position:absolute;bottom:-10%;right:5%;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,255,136,.06) 0%,transparent 70%);pointer-events:none;}
+
+/* FLOATING HUD PANELS */
+.hud-float{position:absolute;font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  background:rgba(4,15,30,.9);border:1px solid var(--border);border-radius:8px;
+  padding:.7rem 1rem;backdrop-filter:blur(12px);color:var(--muted);
+  animation:float 5s ease-in-out infinite;}
+.hud-float .hval{color:var(--cyan);font-weight:600;font-size:.8rem;}
+.hud-float .hlabel{font-size:.6rem;opacity:.6;margin-top:2px;}
+.hf1{top:18%;left:3%;animation-delay:0s;}
+.hf2{top:30%;right:3%;animation-delay:1.2s;}
+.hf3{bottom:20%;left:5%;animation-delay:2.5s;}
+.hf4{bottom:25%;right:4%;animation-delay:.7s;}
+.hf5{top:55%;left:2%;animation-delay:1.8s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+/* HUD BADGE */
+.hud-badge{display:inline-flex;align-items:center;gap:8px;margin-bottom:1.8rem;
+  background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.25);
+  border-radius:4px;padding:.35rem 1rem;
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--cyan);letter-spacing:1.5px;
+  animation:fadeUp .6s ease both;position:relative;overflow:hidden;}
+.hud-badge::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,229,255,.08),transparent);animation:sweep 3s infinite;}
+@keyframes sweep{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+h1{font-family:'Orbitron',monospace;font-size:clamp(2rem,5.5vw,4.5rem);font-weight:800;
+  letter-spacing:-1px;line-height:1.08;margin-bottom:1.5rem;animation:fadeUp .7s .1s ease both;}
+.grad-text{background:linear-gradient(90deg,var(--cyan),var(--green),var(--cyan2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200%;animation:gradMove 4s linear infinite;}
+@keyframes gradMove{0%{background-position:0%;}100%{background-position:200%;}}
+.sub-head{font-size:clamp(.9rem,1.8vw,1.1rem);color:var(--muted);max-width:560px;
+  margin:0 auto 2.5rem;line-height:1.8;font-weight:400;animation:fadeUp .7s .2s ease both;}
+
+.btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:fadeUp .7s .3s ease both;}
+.btn-primary{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.92rem;letter-spacing:1px;
+  text-transform:uppercase;padding:.82rem 2rem;border-radius:6px;border:1px solid var(--cyan);
+  background:rgba(0,229,255,.12);color:var(--cyan);cursor:none;transition:all .25s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;position:relative;overflow:hidden;}
+.btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,229,255,.15),transparent);transform:translateX(-100%);transition:transform .4s;}
+.btn-primary:hover::after{transform:translateX(100%);}
+.btn-primary:hover{background:rgba(0,229,255,.22);box-shadow:0 0 30px rgba(0,229,255,.35);}
+.btn-solid{background:linear-gradient(135deg,var(--blue),#003ab0);border-color:var(--blue);color:#fff;}
+.btn-solid:hover{background:linear-gradient(135deg,#0077ff,#004de6);box-shadow:0 0 30px rgba(0,102,255,.5);}
+
+.urgency{margin-top:2rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;
+  color:var(--gold2);display:flex;align-items:center;gap:8px;justify-content:center;
+  animation:fadeUp .7s .4s ease both;}
+.urgency::before,.urgency::after{content:'';flex:1;max-width:80px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,170,0,.3));}
+.urgency::after{background:linear-gradient(90deg,rgba(255,170,0,.3),transparent);}
+
+/* STATS */
+.stats{display:flex;justify-content:center;flex-wrap:wrap;background:rgba(255,255,255,.015);border-bottom:1px solid var(--border2);position:relative;z-index:2;}
+.stat{flex:1;min-width:160px;text-align:center;padding:1.8rem 1rem;border-right:1px solid var(--border2);position:relative;}
+.stat:last-child{border-right:none;}
+.stat::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:40%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5;}
+.stat-n{font-family:'Orbitron',monospace;font-size:1.9rem;font-weight:700;color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,.5);}
+.stat-l{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);margin-top:.3rem;letter-spacing:.5px;}
+
+/* TECH TAGS */
+.tech-row{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;padding:1.8rem 5%;
+  background:rgba(0,229,255,.02);border-bottom:1px solid var(--border2);position:relative;z-index:2;}
+.ttag{background:rgba(0,229,255,.04);border:1px solid var(--border2);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.32rem .85rem;border-radius:4px;
+  display:flex;align-items:center;gap:5px;transition:all .2s;letter-spacing:.3px;}
+.ttag:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.15);}
+
+/* SECTIONS */
+section{padding:5rem 5%;position:relative;z-index:2;}
+.alt{background:rgba(0,229,255,.015);}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;
+  border:1px solid rgba(0,229,255,.2);border-radius:3px;padding:.26rem .75rem;margin-bottom:1.1rem;}
+h2{font-family:'Orbitron',monospace;font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;
+  letter-spacing:-1px;line-height:1.15;margin-bottom:1rem;}
+.ssub{color:var(--muted);font-size:.92rem;max-width:500px;line-height:1.8;}
+
+/* ── HUD PANEL (reusable) ── */
+.hud-panel{background:rgba(4,15,30,.85);border:1px solid var(--border);border-radius:10px;
+  position:relative;overflow:hidden;backdrop-filter:blur(4px);}
+.hud-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5;}
+.hud-panel-title{font-family:'Orbitron',monospace;font-size:.65rem;color:var(--cyan);
+  letter-spacing:2px;text-transform:uppercase;padding:.9rem 1.2rem .4rem;
+  display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border2);}
+.hud-panel-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+
+/* TERMINAL */
+.terminal{background:#010812;border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  box-shadow:0 0 40px rgba(0,229,255,.08),inset 0 0 40px rgba(0,0,0,.4);}
+.tbar{background:rgba(0,229,255,.05);padding:.7rem 1.1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid var(--border);}
+.td{width:10px;height:10px;border-radius:50%;}
+.tr{background:#ff5f57;}.ty{background:#febc2e;}.tg{background:#28c840;}
+.ttitle{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);margin-left:auto;}
+.tbody{padding:1.3rem;font-family:'JetBrains Mono',monospace;font-size:.74rem;line-height:1.95;min-height:280px;}
+.tp{color:var(--cyan);}.tc{color:var(--white);}.to{color:var(--muted);}.tok{color:var(--green);}
+.tw{color:var(--gold2);}.tdata{color:#a78bfa;}.terr{color:var(--red);}
+.cblink{display:inline-block;width:7px;height:13px;background:var(--cyan);animation:blink .9s infinite;vertical-align:middle;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* METRICS PANEL */
+.metrics-grid{display:flex;flex-direction:column;gap:1rem;}
+.mc{background:rgba(4,15,30,.8);border:1px solid var(--border2);border-radius:8px;padding:1.1rem 1.3rem;transition:all .25s;position:relative;overflow:hidden;}
+.mc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--cyan),transparent);}
+.mc:hover{border-color:var(--border);background:rgba(0,229,255,.05);}
+.mc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;}
+.mc-name{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);letter-spacing:.5px;}
+.mc-val{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:600;color:var(--cyan);}
+.mc-bar{background:rgba(0,229,255,.06);border-radius:100px;height:4px;overflow:hidden;}
+.mc-fill{height:4px;border-radius:100px;position:relative;}
+.mc-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:sweep 2s infinite;}
+.fill-c{background:linear-gradient(90deg,#0044cc,var(--cyan));}
+.fill-g{background:linear-gradient(90deg,#006633,var(--green));}
+.fill-y{background:linear-gradient(90deg,#664400,var(--gold2));}
+.fill-p{background:linear-gradient(90deg,#3b1472,#a855f7);}
+
+/* PROBLEM */
+.prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;margin-top:3rem;align-items:start;}
+.pi{display:flex;gap:.9rem;padding:1.2rem;border-radius:8px;background:rgba(255,51,85,.04);
+  border:1px solid rgba(255,51,85,.12);margin-bottom:.9rem;transition:all .2s;}
+.pi:hover{border-color:rgba(255,51,85,.25);background:rgba(255,51,85,.07);}
+.pi-icon{width:36px;height:36px;border-radius:8px;flex-shrink:0;
+  background:rgba(255,51,85,.1);display:flex;align-items:center;justify-content:center;font-size:.95rem;}
+.pi b{display:block;font-size:.87rem;font-weight:700;margin-bottom:3px;color:var(--white);}
+.pi span{font-size:.78rem;color:var(--muted);line-height:1.5;}
+
+/* CONSCIOUSNESS CHART (from reference) */
+.conscious-chart{padding:1.5rem;}
+.cc-title{font-family:'Orbitron',monospace;font-size:.65rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:1.2rem;}
+.cc-legend{display:flex;gap:1.2rem;margin-bottom:.8rem;flex-wrap:wrap;}
+.cc-leg-item{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
+.cc-leg-dot{width:8px;height:3px;border-radius:100px;}
+.cc-canvas-wrap{position:relative;background:rgba(0,0,0,.2);border-radius:6px;padding:.5rem;border:1px solid var(--border2);}
+.cc-axis-y{position:absolute;left:0;top:.5rem;bottom:1.5rem;display:flex;flex-direction:column;justify-content:space-between;padding-right:4px;font-family:'JetBrains Mono',monospace;font-size:.55rem;color:var(--muted2);}
+#cc-canvas{display:block;width:100%;height:120px;}
+.cc-axis-x{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.55rem;color:var(--muted2);margin-top:.3rem;padding:0 .5rem;}
+
+/* SOLUTION CARDS */
+.sol-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2.8rem;}
+.sc{background:rgba(4,15,30,.8);border:1px solid var(--border2);border-radius:10px;padding:1.8rem;
+  position:relative;overflow:hidden;transition:all .3s;cursor:none;}
+.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0;transition:opacity .3s;}
+.sc:hover{transform:translateY(-5px);border-color:rgba(0,229,255,.25);box-shadow:0 15px 50px rgba(0,229,255,.1);}
+.sc:hover::after{opacity:1;}
+.sc-icon{width:46px;height:46px;border-radius:10px;margin-bottom:1.1rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;
+  background:linear-gradient(135deg,rgba(0,102,255,.15),rgba(0,229,255,.08));border:1px solid rgba(0,229,255,.15);}
+.sc h3{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.5px;margin-bottom:.5rem;text-transform:uppercase;}
+.sc p{font-size:.8rem;color:var(--muted);line-height:1.65;}
+.sc-tag{margin-top:.8rem;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--cyan);opacity:.6;}
+
+/* STEPS */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:2.8rem;background:var(--border2);border-radius:10px;overflow:hidden;}
+.step{background:var(--bg2);padding:2.2rem 1.5rem;position:relative;transition:background .2s;}
+.step:hover{background:rgba(0,229,255,.04);}
+.step-n{font-family:'Orbitron',monospace;font-size:2.5rem;font-weight:800;
+  background:linear-gradient(135deg,rgba(0,229,255,.25),rgba(0,229,255,.05));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:.8rem;}
+.step-i{font-size:1.6rem;margin-bottom:.8rem;}
+.step h3{font-family:'Rajdhani',sans-serif;font-size:.92rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:.4rem;}
+.step p{font-size:.78rem;color:var(--muted);line-height:1.6;}
+
+/* WHO */
+.who-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.8rem;}
+.wc{background:rgba(4,15,30,.8);border:1px solid var(--border2);border-radius:10px;padding:1.8rem 1.3rem;
+  text-align:center;transition:all .25s;position:relative;overflow:hidden;}
+.wc::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);transform:scaleX(0);transition:transform .3s;}
+.wc:hover{border-color:rgba(0,229,255,.2);transform:translateY(-4px);}
+.wc:hover::before{transform:scaleX(1);}
+.we{font-size:2rem;margin-bottom:.8rem;}
+.wc h3{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:.3rem;}
+.wc p{font-size:.76rem;color:var(--muted);line-height:1.5;}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2.8rem;}
+.fc{background:rgba(4,15,30,.8);border:1px solid var(--border2);border-radius:9px;padding:1.5rem;transition:all .2s;}
+.fc:hover{border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.03);}
+.fi{width:40px;height:40px;border-radius:9px;margin-bottom:.9rem;
+  background:linear-gradient(135deg,rgba(0,102,255,.12),rgba(0,229,255,.06));
+  border:1px solid rgba(0,229,255,.12);display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.fc h4{font-family:'Rajdhani',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:.35rem;}
+.fc p{font-size:.77rem;color:var(--muted);line-height:1.6;}
+
+/* MOCK REPORT - AGI STYLE */
+.report-hud{background:#010812;border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 0 60px rgba(0,229,255,.08),0 0 120px rgba(0,102,255,.05);overflow:hidden;margin-top:2.8rem;}
+.report-header{padding:1rem 1.5rem;background:rgba(0,229,255,.05);border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;}
+.rh-left{font-family:'Orbitron',monospace;font-size:.65rem;color:var(--cyan);letter-spacing:2px;}
+.rh-company{font-family:'Rajdhani',monospace;font-size:1.1rem;font-weight:700;color:var(--white);margin-top:2px;}
+.rh-sub{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
+.score-ring-wrap{text-align:center;}
+.score-ring{width:90px;height:90px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;}
+.score-ring-svg{position:absolute;inset:0;width:100%;height:100%;}
+.score-inner{text-align:center;}
+.score-n{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:800;color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,.7);line-height:1;}
+.score-l{font-family:'JetBrains Mono',monospace;font-size:.5rem;color:var(--muted);}
+.report-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.rb-left{padding:1.5rem;border-right:1px solid var(--border2);}
+.rb-right{padding:1.5rem;}
+.rb-title{font-family:'Orbitron',monospace;font-size:.6rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:6px;}
+.rb-title::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.metric-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.9rem;}
+.mr-label{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);min-width:140px;}
+.mr-bar{flex:1;background:rgba(0,229,255,.06);border-radius:100px;height:5px;position:relative;overflow:hidden;}
+.mr-fill{height:5px;border-radius:100px;}
+.mr-val{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;color:var(--white);min-width:34px;text-align:right;}
+/* LIVE chart in report */
+#report-canvas{display:block;width:100%;height:110px;border-radius:6px;}
+.report-queries{margin-top:.8rem;}
+.rq-title{font-family:'Orbitron',monospace;font-size:.58rem;color:var(--gold2);letter-spacing:2px;text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:6px;}
+.rq-title::before{content:'⚠';font-size:.7rem;}
+.qpill{display:inline-flex;align-items:center;gap:4px;background:rgba(255,170,0,.07);
+  border:1px solid rgba(255,170,0,.2);color:var(--gold2);
+  font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.22rem .65rem;border-radius:3px;margin:.18rem;}
+.report-rec{padding:.85rem 1.1rem;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);
+  border-radius:6px;font-size:.77rem;color:var(--muted);margin-top:1rem;}
+.report-rec strong{color:var(--cyan);}
+.report-footer{padding:.8rem 1.5rem;border-top:1px solid var(--border2);background:rgba(0,229,255,.03);
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
+.rf-generated{color:var(--green);}
+
+/* MODULES */
+.mod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.3rem;margin-top:2.8rem;}
+.mod{background:#010812;border:1px solid var(--border);border-radius:10px;padding:2rem;
+  position:relative;overflow:hidden;transition:all .3s;}
+.mod:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,229,255,.08);border-color:rgba(0,229,255,.25);}
+.mod-n{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:.7rem;opacity:.7;}
+.mod h3{font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:.6rem;}
+.mod p{font-size:.8rem;color:var(--muted);line-height:1.65;}
+.mod-bg{position:absolute;right:-10px;bottom:-10px;font-size:7rem;opacity:.04;}
+.mod-tags{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.35rem;}
+.mtag{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted2);
+  border:1px solid var(--border2);border-radius:3px;padding:.15rem .5rem;}
+
+/* FOUNDERS */
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;margin-top:2.5rem;}
+.fc-card{background:#010812;border:1px solid var(--border);border-radius:10px;padding:1.8rem;
+  display:flex;gap:1.3rem;align-items:flex-start;transition:all .25s;}
+.fc-card:hover{border-color:rgba(0,229,255,.22);box-shadow:0 10px 40px rgba(0,229,255,.07);}
+.fc-av{width:60px;height:60px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;
+  box-shadow:0 0 20px rgba(0,229,255,.3);}
+.fc-name{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;margin-bottom:2px;}
+.fc-role{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--cyan);margin-bottom:.7rem;letter-spacing:1px;text-transform:uppercase;}
+.fc-bio{font-size:.8rem;color:var(--muted);line-height:1.65;}
+.fc-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.7rem;}
+.ftag{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted2);border:1px solid var(--border2);border-radius:3px;padding:.12rem .48rem;}
+
+/* VISION */
+.vis{background:linear-gradient(135deg,rgba(0,102,255,.08),rgba(0,229,255,.04));
+  border:1px solid rgba(0,229,255,.15);border-radius:12px;padding:2.8rem;margin-top:2.5rem;position:relative;overflow:hidden;}
+.vis::before{content:'"';position:absolute;top:-10px;left:15px;font-size:8rem;color:rgba(0,229,255,.06);line-height:1;font-family:serif;}
+.vis p{font-size:1.05rem;line-height:1.85;color:var(--muted);position:relative;}
+.vis p strong{color:var(--white);}
+
+/* CONTACT */
+.contact-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:4rem;margin-top:2.8rem;}
+.cl h3{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:.7rem;}
+.cl p{font-size:.85rem;color:var(--muted);line-height:1.78;margin-bottom:1.8rem;}
+.cdet{display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem;font-size:.82rem;color:var(--muted);}
+.cdet-icon{width:30px;height:30px;border-radius:7px;background:rgba(0,229,255,.08);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;}
+.early{margin-top:1.8rem;padding:1.3rem;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.18);border-radius:8px;}
+.early-t{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--gold);font-weight:600;margin-bottom:.4rem;display:flex;align-items:center;gap:5px;}
+.early p{font-size:.78rem;color:var(--muted);margin:0;line-height:1.6;}
+.form-hud{background:#010812;border:1px solid var(--border);border-radius:12px;padding:2.2rem;
+  box-shadow:0 0 50px rgba(0,229,255,.06);}
+.ftitle{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:1.4rem;display:flex;align-items:center;gap:8px;}
+.ftitle::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+.fg{margin-bottom:.95rem;}
+.fg label{display:block;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);margin-bottom:.38rem;letter-spacing:.5px;text-transform:uppercase;}
+.fg input,.fg select,.fg textarea{width:100%;background:rgba(0,229,255,.04);border:1px solid var(--border2);
+  border-radius:6px;padding:.68rem .95rem;color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-size:.86rem;transition:all .2s;outline:none;cursor:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--cyan);background:rgba(0,229,255,.07);box-shadow:0 0 0 2px rgba(0,229,255,.1);}
+.fg select option{background:#071628;}
+.fg textarea{min-height:80px;resize:vertical;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.fsub{width:100%;padding:.88rem;background:linear-gradient(135deg,rgba(0,102,255,.8),rgba(0,229,255,.6));
+  color:#fff;border:none;border-radius:7px;font-family:'Rajdhani',sans-serif;font-size:.92rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:none;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden;}
+.fsub::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-100%);transition:transform .4s;}
+.fsub:hover::before{transform:translateX(100%);}
+.fsub:hover{box-shadow:0 8px 40px rgba(0,229,255,.4);transform:translateY(-2px);}
+.fprivacy{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted2);text-align:center;margin-top:.8rem;display:flex;align-items:center;justify-content:center;gap:4px;}
+
+/* CTA */
+.cta{text-align:center;padding:7rem 5%;background:radial-gradient(ellipse at 50% 0%,rgba(0,102,255,.12) 0%,transparent 60%);border-top:1px solid var(--border2);position:relative;z-index:2;}
+.cta h2{margin-bottom:1rem;}
+.cta p{color:var(--muted);max-width:460px;margin:0 auto 2.5rem;}
+
+/* FOOTER */
+footer{background:#010812;border-top:1px solid var(--border2);padding:2.2rem 5%;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;position:relative;z-index:2;}
+.fl{display:flex;align-items:center;gap:8px;}
+.flinks{display:flex;gap:2rem;}
+.flinks a{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);text-decoration:none;transition:color .2s;}
+.flinks a:hover{color:var(--cyan);}
+.fcopy{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted2);}
+
+/* ══════════════════════════════════
+   AI CHAT WIDGET — PREMIUM VERSION
+═══════════════════════════════════ */
+#ai-widget{position:fixed;bottom:1.8rem;right:1.8rem;z-index:500;}
+
+/* Trigger button */
+.ai-trigger{
+  width:60px;height:60px;border-radius:16px;cursor:none;border:1px solid var(--cyan);
+  background:rgba(4,15,30,.9);backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 30px rgba(0,229,255,.35),0 0 60px rgba(0,229,255,.1);
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.ai-trigger::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,102,255,.2),rgba(0,229,255,.15));
+  animation:triggerPulse 3s infinite;}
+@keyframes triggerPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+.ai-trigger-icon{font-size:1.5rem;position:relative;z-index:1;}
+.ai-trigger:hover{box-shadow:0 0 40px rgba(0,229,255,.6),0 0 80px rgba(0,229,255,.2);transform:scale(1.05);}
+.ai-notify{position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;
+  background:var(--green);border:2px solid var(--bg);
+  animation:notify 2s infinite;font-size:0;}
+@keyframes notify{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.5);}50%{box-shadow:0 0 0 6px rgba(0,255,136,0);}}
+
+/* Main panel */
+.ai-panel{
+  position:absolute;bottom:74px;right:0;width:380px;
+  background:rgba(2,9,18,.97);border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;backdrop-filter:blur(30px);
+  box-shadow:0 25px 80px rgba(0,0,0,.9),0 0 60px rgba(0,229,255,.08),inset 0 1px 0 rgba(0,229,255,.1);
+  display:none;flex-direction:column;
+  transform:scale(.95) translateY(8px);transform-origin:bottom right;
+  transition:transform .2s,opacity .2s;opacity:0;
+}
+.ai-panel.open{display:flex;transform:scale(1) translateY(0);opacity:1;}
+
+/* Panel header */
+.ai-header{
+  padding:1rem 1.2rem;background:rgba(0,229,255,.05);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.9rem;position:relative;overflow:hidden;
+}
+.ai-header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.ai-av{width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  box-shadow:0 0 15px rgba(0,229,255,.4);position:relative;}
+.ai-av::after{content:'';position:absolute;inset:-2px;border-radius:12px;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));z-index:-1;opacity:.3;animation:avGlow 2s infinite;}
+@keyframes avGlow{0%,100%{opacity:.3;}50%{opacity:.6;}}
+.ai-header-info{flex:1;}
+.ai-hname{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;color:var(--white);letter-spacing:.5px;}
+.ai-hstatus{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.ai-hdot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse .8s infinite;}
+.ai-hstatus-txt{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--green);}
+.ai-hclose{background:none;border:none;color:var(--muted);cursor:none;font-size:1rem;padding:4px;
+  transition:color .2s;line-height:1;}
+.ai-hclose:hover{color:var(--white);}
+/* Model indicator */
+.ai-model-badge{font-family:'JetBrains Mono',monospace;font-size:.58rem;
+  background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);color:#a78bfa;
+  padding:.18rem .55rem;border-radius:3px;}
+
+/* Messages area */
+.ai-msgs{padding:.9rem;min-height:240px;max-height:300px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:.7rem;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
+.ai-msgs::-webkit-scrollbar{width:4px;}
+.ai-msgs::-webkit-scrollbar-track{background:transparent;}
+.ai-msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* Message bubbles */
+.ai-msg{max-width:90%;font-size:.8rem;line-height:1.55;animation:msgIn .25s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.ai-msg.bot{
+  align-self:flex-start;
+  background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);
+  border-radius:2px 12px 12px 12px;padding:.7rem .95rem;color:var(--white);
+  position:relative;
+}
+.ai-msg.bot::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--cyan),transparent);opacity:.4;}
+.ai-msg.user{
+  align-self:flex-end;
+  background:linear-gradient(135deg,rgba(0,102,255,.4),rgba(0,229,255,.2));
+  border:1px solid rgba(0,102,255,.3);
+  border-radius:12px 2px 12px 12px;padding:.7rem .95rem;color:var(--white);
+}
+.ai-msg-meta{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted2);margin-top:4px;display:flex;align-items:center;gap:4px;}
+
+/* Typing indicator */
+.ai-typing-msg{align-self:flex-start;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);
+  border-radius:2px 12px 12px 12px;padding:.65rem .95rem;display:flex;align-items:center;gap:5px;}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:td .8s infinite;}
+.typing-dot:nth-child(2){animation-delay:.15s;}
+.typing-dot:nth-child(3){animation-delay:.3s;}
+@keyframes td{0%,100%{opacity:.2;transform:scale(.8);}50%{opacity:1;transform:scale(1.2);}}
+
+/* Suggested questions */
+.ai-suggestions{padding:.6rem .9rem;display:flex;flex-wrap:wrap;gap:.4rem;border-top:1px solid var(--border2);}
+.sug-btn{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--cyan);
+  background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:100px;
+  padding:.25rem .65rem;cursor:none;transition:all .2s;white-space:nowrap;}
+.sug-btn:hover{background:rgba(0,229,255,.15);box-shadow:0 0 8px rgba(0,229,255,.2);}
+
+/* Metrics mini panel inside chat */
+.ai-mini-metrics{background:rgba(0,0,0,.3);border:1px solid var(--border2);border-radius:8px;padding:.8rem;margin-top:.5rem;}
+.amm-title{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:.6rem;}
+.amm-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem;}
+.amm-label{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
+.amm-bar-wrap{flex:1;margin:0 .6rem;background:rgba(0,229,255,.05);border-radius:100px;height:3px;}
+.amm-bar{height:3px;border-radius:100px;background:linear-gradient(90deg,var(--blue),var(--cyan));}
+.amm-val{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:600;color:var(--cyan);}
+
+/* Input area */
+.ai-input-area{padding:.8rem;border-top:1px solid var(--border2);background:rgba(0,0,0,.2);}
+.ai-input-row{display:flex;gap:.5rem;align-items:flex-end;}
+.ai-input{flex:1;background:rgba(0,229,255,.05);border:1px solid var(--border2);
+  border-radius:8px;padding:.6rem .85rem;color:var(--white);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:.8rem;outline:none;
+  transition:border .2s;resize:none;min-height:38px;max-height:80px;line-height:1.5;}
+.ai-input:focus{border-color:var(--cyan);background:rgba(0,229,255,.07);}
+.ai-send{width:38px;height:38px;background:linear-gradient(135deg,var(--blue),var(--cyan));
+  border:none;border-radius:8px;cursor:none;display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;transition:all .2s;flex-shrink:0;}
+.ai-send:hover{box-shadow:0 0 15px rgba(0,229,255,.4);transform:scale(1.05);}
+.ai-footer-bar{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted2);}
+.ai-powered{display:flex;align-items:center;gap:4px;color:var(--muted2);}
+.ai-powered span{color:var(--cyan);}
+
+/* Stream cursor */
+.stream-cursor{display:inline-block;width:2px;height:12px;background:var(--cyan);
+  animation:blink .5s infinite;vertical-align:middle;margin-left:1px;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .prob-grid,.sol-grid,.f-grid,.contact-grid{grid-template-columns:1fr;}
+  .sol-grid,.feat-grid{grid-template-columns:1fr 1fr;}
+  .steps,.who-grid{grid-template-columns:1fr 1fr;}
+  .mod-grid{grid-template-columns:1fr;}
+  .report-body{grid-template-columns:1fr;}
+  .rb-left{border-right:none;border-bottom:1px solid var(--border2);}
+  .hf1,.hf2,.hf3,.hf4,.hf5{display:none;}
+  .nav-links{display:none;}
+  body{cursor:auto;}
+  #cursor,#cursor-ring,#cursor-dot{display:none;}
+  .ai-panel{width:calc(100vw - 2rem);}
+}
+@media(max-width:600px){
+  .sol-grid,.feat-grid,.steps,.who-grid{grid-template-columns:1fr;}
+  .frow{grid-template-columns:1fr;}
+  h1{letter-spacing:-1px;}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="cursor-dot"></div>
+
+<!-- BG -->
+<canvas id="bg-canvas"></canvas>
+<div class="grid-bg"></div>
+<div class="scanlines"></div>
+
+<!-- ══ AI CHAT WIDGET ══ -->
+<div id="ai-widget">
+  <div class="ai-panel" id="ai-panel">
+    <!-- HEADER -->
+    <div class="ai-header">
+      <div class="ai-av">🤖</div>
+      <div class="ai-header-info">
+        <div class="ai-hname">CREDITGUIDE AI</div>
+        <div class="ai-hstatus">
+          <span class="ai-hdot"></span>
+          <span class="ai-hstatus-txt">ONLINE · PROCESSING READY</span>
+        </div>
+      </div>
+      <span class="ai-model-badge">v2.4</span>
+      <button class="ai-hclose" onclick="toggleChat()">✕</button>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="ai-msgs" id="ai-msgs">
+      <div class="ai-msg bot" id="init-msg">
+        👋 <strong>Welcome to CreditGuide AI Intelligence Hub.</strong><br/><br/>
+        I can analyze your <span style="color:var(--cyan)">credit readiness</span>, explain <span style="color:var(--green)">CMA reports</span>, predict <span style="color:var(--gold2)">bank queries</span>, and help you understand our platform. What would you like to explore?
+        <div class="ai-mini-metrics">
+          <div class="amm-title">⬡ System Status</div>
+          <div class="amm-row"><span class="amm-label">AI Engine</span><div class="amm-bar-wrap"><div class="amm-bar" style="width:97%"></div></div><span class="amm-val" style="color:var(--green)">LIVE</span></div>
+          <div class="amm-row"><span class="amm-label">Credit Models</span><div class="amm-bar-wrap"><div class="amm-bar" style="width:100%"></div></div><span class="amm-val">7/7</span></div>
+          <div class="amm-row"><span class="amm-label">Data Freshness</span><div class="amm-bar-wrap"><div class="amm-bar" style="width:94%;background:linear-gradient(90deg,#006633,var(--green))"></div></div><span class="amm-val" style="color:var(--green)">94%</span></div>
+        </div>
+        <div class="ai-msg-meta">🤖 CreditGuide AI · Just now</div>
+      </div>
+    </div>
+
+    <!-- SUGGESTED QUESTIONS -->
+    <div class="ai-suggestions" id="ai-sugs">
+      <button class="sug-btn" onclick="askSug('What is Credit Readiness Score?')">Credit Score?</button>
+      <button class="sug-btn" onclick="askSug('How does CMA report work?')">CMA Reports</button>
+      <button class="sug-btn" onclick="askSug('What bank queries will I face?')">Bank Queries</button>
+      <button class="sug-btn" onclick="askSug('How long does it take?')">Timeline</button>
+      <button class="sug-btn" onclick="askSug('What is the pricing?')">Pricing</button>
+    </div>
+
+    <!-- INPUT -->
+    <div class="ai-input-area">
+      <div class="ai-input-row">
+        <textarea class="ai-input" id="ai-input" placeholder="Ask about MSME credit, CMA, bank queries..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+        <button class="ai-send" onclick="sendMsg()">➤</button>
+      </div>
+      <div class="ai-footer-bar">
+        <span class="ai-powered">Powered by <span>CreditGuide AI</span></span>
+        <span>Press Enter to send</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRIGGER -->
+  <button class="ai-trigger" onclick="toggleChat()">
+    <span class="ai-trigger-icon">🤖</span>
+    <span class="ai-notify"></span>
+  </button>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-box">⚡</div>
+    <span class="logo-text">Credit<span>Guide</span> AI</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home');return false;">Home</a></li>
+    <li><a href="#" onclick="showPage('product');return false;">Product</a></li>
+    <li><a href="#" onclick="showPage('about');return false;">About</a></li>
+    <li><a href="#" onclick="showPage('contact');return false;">Contact</a></li>
+  </ul>
+  <div class="nav-right" style="display:flex;align-items:center;gap:1rem;">
+    <div class="hud-status"><span class="hud-dot"></span>AI SYSTEM ONLINE</div>
+    <a href="#" class="btn-cta" onclick="showPage('contact');return false;">⚡ Request Demo</a>
+  </div>
+</nav>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showPage('home')" id="tab-home">◈ Home</button>
+  <button class="tab" onclick="showPage('product')" id="tab-product">◈ Product</button>
+  <button class="tab" onclick="showPage('about')" id="tab-about">◈ About</button>
+  <button class="tab" onclick="showPage('contact')" id="tab-contact">◈ Contact</button>
+</div>
+
+<!-- ══════════════════ HOME ══════════════════ -->
+<div id="page-home" class="page active">
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <i>⬡</i>AI Credit Analysis &nbsp;<i>⬡</i>Real-Time Risk Scoring &nbsp;<i>⬡</i>CMA Report Gen &nbsp;<i>⬡</i>Bank Query Prediction &nbsp;<i>⬡</i>MSME Intelligence &nbsp;<i>⬡</i>Working Capital AI &nbsp;<i>⬡</i>Industry Benchmarking &nbsp;<i>⬡</i>Ensemble ML Models &nbsp;<i>⬡</i>NLP Documentation &nbsp;
+    <i>⬡</i>AI Credit Analysis &nbsp;<i>⬡</i>Real-Time Risk Scoring &nbsp;<i>⬡</i>CMA Report Gen &nbsp;<i>⬡</i>Bank Query Prediction &nbsp;<i>⬡</i>MSME Intelligence &nbsp;<i>⬡</i>Working Capital AI &nbsp;<i>⬡</i>Industry Benchmarking &nbsp;<i>⬡</i>Ensemble ML Models &nbsp;<i>⬡</i>NLP Documentation &nbsp;
+  </div>
+</div>
+
+<section class="hero">
+  <div class="hero-aura"></div>
+  <div class="hero-aura2"></div>
+
+  <!-- Floating HUD badges -->
+  <div class="hud-float hf1">
+    <div><span class="hval">74</span><span style="font-size:.6rem;color:var(--muted)">/100</span></div>
+    <div class="hlabel">CREDIT READINESS</div>
+  </div>
+  <div class="hud-float hf2">
+    <div class="hval">CMA ✓</div>
+    <div class="hlabel">REPORT GENERATED</div>
+  </div>
+  <div class="hud-float hf3">
+    <div class="hval">4 QUERIES</div>
+    <div class="hlabel">BANK PREDICTED</div>
+  </div>
+  <div class="hud-float hf4">
+    <div class="hval">₹75L</div>
+    <div class="hlabel">LOAN READY</div>
+  </div>
+  <div class="hud-float hf5">
+    <div class="hval">98%</div>
+    <div class="hlabel">DOC COMPLETENESS</div>
+  </div>
+
+  <div class="hud-badge"><span class="hud-dot" style="width:7px;height:7px;"></span> EARLY ACCESS · LIMITED ONBOARDING AVAILABLE</div>
+  <h1>MSME Credit<br><span class="grad-text">Intelligence</span><br>Powered by AI</h1>
+  <p class="sub-head">We help MSMEs prepare bank-ready credit proposals and enable lenders to assess them faster — powered by advanced AI, NLP, and financial intelligence engines.</p>
+  <div class="btns">
+    <a href="#" class="btn-primary btn-solid" onclick="showPage('contact');return false;">⚡ Request Demo</a>
+    <a href="#" class="btn-primary" onclick="showPage('contact');return false;">→ Join Waitlist</a>
+  </div>
+  <div class="urgency">⚡ Currently in early access · Limited slots available</div>
+</section>
+
+<!-- TECH STRIP -->
+<div class="tech-row">
+  <div class="ttag">🧠 Machine Learning</div><div class="ttag">📊 Financial Analytics</div>
+  <div class="ttag">🔮 Predictive AI</div><div class="ttag">☁️ Cloud Infrastructure</div>
+  <div class="ttag">🔒 Bank-Grade Security</div><div class="ttag">⚡ Real-Time Processing</div>
+  <div class="ttag">📡 API-First Platform</div><div class="ttag">🤖 NLP Engine</div>
+  <div class="ttag">📈 Risk Modeling</div><div class="ttag">🏗️ Scalable Architecture</div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-n">63M+</div><div class="stat-l">MSMEs in India</div></div>
+  <div class="stat"><div class="stat-n">₹25T</div><div class="stat-l">Credit Gap</div></div>
+  <div class="stat"><div class="stat-n">60%</div><div class="stat-l">Rejections: Poor Prep</div></div>
+  <div class="stat"><div class="stat-n">3x</div><div class="stat-l">Faster Approvals</div></div>
+  <div class="stat"><div class="stat-n">&lt;5m</div><div class="stat-l">Report Generation</div></div>
+</div>
+
+<!-- TERMINAL + LIVE METRICS -->
+<section class="alt">
+  <div class="chip">🤖 Live AI Engine</div>
+  <h2>AI Analysis in Real Time</h2>
+  <p class="ssub">Watch our multi-model engine process financial data — generating structured credit intelligence banks trust.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2.8rem;align-items:start;">
+    <div class="terminal">
+      <div class="tbar"><div class="td tr"></div><div class="td ty"></div><div class="td tg"></div><div class="ttitle">creditguide-ai · analysis v2.4.1</div></div>
+      <div class="tbody" id="term-body"></div>
+    </div>
+    <div class="metrics-grid">
+      <div class="mc"><div class="mc-head"><span class="mc-name">CREDIT READINESS SCORE</span><span class="mc-val" style="color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.6);">74/100</span></div><div class="mc-bar"><div class="mc-fill fill-c" style="width:74%"></div></div></div>
+      <div class="mc"><div class="mc-head"><span class="mc-name">FINANCIAL DOCUMENTATION</span><span class="mc-val">68%</span></div><div class="mc-bar"><div class="mc-fill fill-p" style="width:68%"></div></div></div>
+      <div class="mc"><div class="mc-head"><span class="mc-name">WORKING CAPITAL HEALTH</span><span class="mc-val" style="color:var(--gold2);">MODERATE</span></div><div class="mc-bar"><div class="mc-fill fill-y" style="width:62%"></div></div></div>
+      <div class="mc"><div class="mc-head"><span class="mc-name">DEBT SERVICE COVERAGE</span><span class="mc-val">1.42x</span></div><div class="mc-bar"><div class="mc-fill fill-c" style="width:78%"></div></div></div>
+      <div class="mc"><div class="mc-head"><span class="mc-name">COLLATERAL COVERAGE</span><span class="mc-val" style="color:var(--green);text-shadow:0 0 10px rgba(0,255,136,.5);">STRONG</span></div><div class="mc-bar"><div class="mc-fill fill-g" style="width:90%"></div></div></div>
+      <div class="mc"><div class="mc-head"><span class="mc-name">INDUSTRY BENCHMARK</span><span class="mc-val">TOP 40%</span></div><div class="mc-bar"><div class="mc-fill fill-c" style="width:60%"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section>
+  <div class="chip">⚠ Problem Space</div>
+  <h2>The MSME Credit Gap<br>Starts with Poor Preparation</h2>
+  <p class="ssub">Most rejections aren't about creditworthiness — they're about how businesses present themselves to lenders.</p>
+  <div class="prob-grid">
+    <div>
+      <div class="pi"><div class="pi-icon">📂</div><div><b>Incomplete Financial Data</b><span>MSMEs lack organized records required by banks, causing delays before evaluation even begins.</span></div></div>
+      <div class="pi"><div class="pi-icon">📊</div><div><b>Poor CMA Preparation</b><span>CMA documents are incorrectly structured or missing key analytical data banks need.</span></div></div>
+      <div class="pi"><div class="pi-icon">🔄</div><div><b>Multiple Bank Queries</b><span>Back-and-forth loops between banks and applicants delay approvals by weeks or months.</span></div></div>
+      <div class="pi"><div class="pi-icon">⏳</div><div><b>Delayed Approvals</b><span>Average MSME loan approval takes 3–6 weeks, hurting cash flow and business growth.</span></div></div>
+    </div>
+    <!-- AGI-STYLE CONSCIOUSNESS CHART -->
+    <div class="hud-panel">
+      <div class="hud-panel-title">Credit Intelligence Metrics</div>
+      <div class="conscious-chart">
+        <div class="cc-title">MSME CREDIT PERFORMANCE CURVES</div>
+        <div class="cc-legend">
+          <div class="cc-leg-item"><div class="cc-leg-dot" style="background:var(--cyan)"></div>With CreditGuide AI</div>
+          <div class="cc-leg-item"><div class="cc-leg-dot" style="background:var(--green)"></div>Credit Readiness</div>
+          <div class="cc-leg-item"><div class="cc-leg-dot" style="background:rgba(255,170,0,.7)"></div>Without Preparation</div>
+        </div>
+        <div class="cc-canvas-wrap">
+          <canvas id="cc-canvas" height="120"></canvas>
+        </div>
+        <div class="cc-axis-x">
+          <span>0</span><span>500</span><span>1000</span><span>1500</span><span>2000</span>
+        </div>
+        <div style="margin-top:1rem;padding:.8rem;background:rgba(0,229,255,.05);border:1px solid var(--border2);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);">
+          💡 <strong style="color:var(--cyan)">CreditGuide AI</strong> addresses the 58% rejection rate by ensuring structured, bank-ready documentation every time.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="alt">
+  <div class="chip">✨ Solution</div>
+  <h2>A Smarter Way to Prepare<br>for Business Loans</h2>
+  <p class="ssub">Our platform guides MSMEs through every step of credit preparation — eliminating guesswork.</p>
+  <div class="sol-grid">
+    <div class="sc"><div class="sc-icon">🎯</div><h3>Credit Readiness</h3><p>Instantly understand your standing before approaching a bank. AI-powered scoring across 40+ parameters.</p><div class="sc-tag">// real-time scoring</div></div>
+    <div class="sc"><div class="sc-icon">📈</div><h3>Financial Analysis</h3><p>Generate organized, bank-compliant financial summaries and CMA reports in minutes, not weeks.</p><div class="sc-tag">// auto-generated CMA</div></div>
+    <div class="sc"><div class="sc-icon">📝</div><h3>Project Reports</h3><p>AI-powered project report generation with projections, rationale, and risk disclosures — fully formatted.</p><div class="sc-tag">// intelligent templating</div></div>
+    <div class="sc"><div class="sc-icon">🔮</div><h3>Query Prediction</h3><p>Our NLP engine anticipates exactly what banks will ask before they ask it — eliminating back-and-forth.</p><div class="sc-tag">// NLP prediction engine</div></div>
+    <div class="sc"><div class="sc-icon">🏆</div><h3>Approval Score</h3><p>AI-calculated approval probability with specific improvement recommendations to maximize chances.</p><div class="sc-tag">// ensemble ML model</div></div>
+    <div class="sc"><div class="sc-icon">🏭</div><h3>Benchmarking</h3><p>Compare financials against 200+ industry datasets to understand exactly how lenders see your business.</p><div class="sc-tag">// 200+ datasets</div></div>
+  </div>
+</section>
+
+<!-- STEPS -->
+<section>
+  <div class="chip">⚙️ Process Flow</div>
+  <h2>How It Works</h2>
+  <div class="steps">
+    <div class="step"><div class="step-n">01</div><div class="step-i">📋</div><h3>Enter Details</h3><p>Provide business info and financials through our guided smart interface.</p></div>
+    <div class="step"><div class="step-n">02</div><div class="step-i">🧠</div><h3>AI Analyzes</h3><p>Ensemble AI evaluates 40+ parameters across working capital, ratios, and credit indicators.</p></div>
+    <div class="step"><div class="step-n">03</div><div class="step-i">📄</div><h3>Generate Report</h3><p>Bank-ready credit proposal with CMA, project report, score card, and predicted queries.</p></div>
+    <div class="step"><div class="step-n">04</div><div class="step-i">🏦</div><h3>Submit & Win</h3><p>Present your polished credit file to lenders with pre-answered queries and maximum confidence.</p></div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section class="alt">
+  <div class="chip">👥 Audience</div>
+  <h2>Built for Every Stakeholder</h2>
+  <div class="who-grid">
+    <div class="wc"><div class="we">🏭</div><h3>MSME Businesses</h3><p>Prepare stronger applications and dramatically improve approval chances</p></div>
+    <div class="wc"><div class="we">📋</div><h3>Chartered Accountants</h3><p>Serve clients faster with AI-generated CMA and financial reports</p></div>
+    <div class="wc"><div class="we">🤝</div><h3>Loan Consultants</h3><p>Scale your practice and increase client approval rates significantly</p></div>
+    <div class="wc"><div class="we">🏦</div><h3>Banks & NBFCs</h3><p>Receive structured, complete proposals that reduce processing time</p></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+  <div class="chip">⚡ Features</div>
+  <h2>Everything You Need<br>to Get Loan-Ready</h2>
+  <div class="feat-grid">
+    <div class="fc"><div class="fi">📊</div><h4>Credit Readiness Score</h4><p>Composite AI score with breakdown and improvement suggestions.</p></div>
+    <div class="fc"><div class="fi">💰</div><h4>Working Capital Assessment</h4><p>Detailed WC cycle analysis, current ratio, optimization recommendations.</p></div>
+    <div class="fc"><div class="fi">🔮</div><h4>Bank Query Prediction</h4><p>NLP-powered query list with recommended answers to speed up approval.</p></div>
+    <div class="fc"><div class="fi">📄</div><h4>CMA & Project Reports</h4><p>Auto-generated documents formatted to exact bank standards.</p></div>
+    <div class="fc"><div class="fi">🏭</div><h4>Industry Benchmarking</h4><p>Compare across 200+ industry datasets for lender-perspective insights.</p></div>
+    <div class="fc"><div class="fi">🔒</div><h4>Bank-Grade Security</h4><p>AES-256 encryption and SOC2 compliance. Your data stays private.</p></div>
+    <div class="fc"><div class="fi">📡</div><h4>API Integration</h4><p>Connect with Tally, Zoho, QuickBooks and other accounting software.</p></div>
+    <div class="fc"><div class="fi">📱</div><h4>Multi-Platform</h4><p>Web, mobile, or desktop. Collaborate with CA or consultant in real time.</p></div>
+    <div class="fc"><div class="fi">📈</div><h4>Scenario Modeling</h4><p>What-if scenarios to optimize your financial profile before submission.</p></div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="chip">🚀 Launch</div>
+  <h2>Be Among the First to<br>Experience the Future</h2>
+  <p>Limited early access slots. Join now to shape the product and get priority onboarding.</p>
+  <div class="btns"><a href="#" class="btn-primary btn-solid" onclick="showPage('contact');return false;">⚡ Request Demo</a><a href="#" class="btn-primary" onclick="showPage('contact');return false;">→ Join Waitlist</a></div>
+</section>
+</div>
+
+<!-- ══════════════════ PRODUCT ══════════════════ -->
+<div id="page-product" class="page">
+<section class="hero" style="min-height:50vh;padding-top:5rem;">
+  <div class="hero-aura"></div>
+  <div class="hud-badge"><span class="hud-dot" style="width:7px;height:7px;"></span>CREDITGUIDE AI PLATFORM</div>
+  <h1>Your <span class="grad-text">Credit</span><br>Preparation Partner</h1>
+  <p class="sub-head">End-to-end AI tools that transform raw business data into a bank-ready credit file — powered by our multi-model intelligence engine.</p>
+</section>
+
+<section>
+  <div class="chip">🏗️ Core Modules</div>
+  <h2>The AI Engines Inside</h2>
+  <div class="mod-grid">
+    <div class="mod"><div class="mod-n">Module 01</div><h3>Industry Intelligence Engine</h3><p>Updated with sector-specific benchmarks, RBI guidelines, and lending norms across 200+ industries. Contextualizes your business within its competitive landscape for precision scoring.</p><div class="mod-tags"><span class="mtag">ML Classification</span><span class="mtag">NLP</span><span class="mtag">Live Data</span></div><div class="mod-bg">🏭</div></div>
+    <div class="mod"><div class="mod-n">Module 02</div><h3>Financial Analysis Engine</h3><p>Deep P&L, balance sheet, cash flow, and 40+ ratio analysis. Auto-calculates working capital requirements, DSCR, and financial health indicators with multi-year trend analysis.</p><div class="mod-tags"><span class="mtag">Time-Series AI</span><span class="mtag">Ratio Modeling</span><span class="mtag">Anomaly Detection</span></div><div class="mod-bg">📊</div></div>
+    <div class="mod"><div class="mod-n">Module 03</div><h3>Credit Risk Engine</h3><p>Proprietary ensemble model combining gradient boosting, neural networks, and rule-based systems trained on MSME credit data. Stress-tests projections and gives lender-perspective assessment.</p><div class="mod-tags"><span class="mtag">Ensemble ML</span><span class="mtag">Stress Testing</span><span class="mtag">Risk Scoring</span></div><div class="mod-bg">🛡️</div></div>
+    <div class="mod"><div class="mod-n">Module 04</div><h3>Documentation Guidance</h3><p>Auto-generates bank-compliant CMA reports, project reports, and credit notes. NLP engine trained on thousands of approved credit proposals to match exact lender expectations.</p><div class="mod-tags"><span class="mtag">NLP Generation</span><span class="mtag">Template Engine</span><span class="mtag">Query Prediction</span></div><div class="mod-bg">📝</div></div>
+  </div>
+</section>
+
+<!-- AGI-STYLE REPORT -->
+<section class="alt">
+  <div class="chip">📋 Sample Output</div>
+  <h2>The CreditGuide AI<br>Intelligence Report</h2>
+  <p class="ssub">A structured, bank-ready credit snapshot generated in under 5 minutes — styled like an AI intelligence dashboard.</p>
+
+  <div class="report-hud">
+    <div class="report-header">
+      <div class="rh-left">
+        <div>⬡ CREDITGUIDE AI — CREDIT INTELLIGENCE REPORT</div>
+        <div class="rh-company">Acme Textiles Pvt Ltd</div>
+        <div class="rh-sub">Manufacturing · Textile · FY2024-25 · Term Loan Application ₹75L</div>
+      </div>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg class="score-ring-svg" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(0,229,255,.1)" stroke-width="6"/>
+            <circle cx="45" cy="45" r="38" fill="none" stroke="url(#scoreGrad)" stroke-width="6"
+              stroke-dasharray="239" stroke-dashoffset="62" stroke-linecap="round"
+              transform="rotate(-90 45 45)"/>
+            <defs>
+              <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:var(--blue)"/>
+                <stop offset="100%" style="stop-color:var(--cyan)"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="score-inner">
+            <div class="score-n">74</div>
+            <div class="score-l">/ 100</div>
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--cyan);margin-top:4px;text-align:center;letter-spacing:1px;">CREDIT READY</div>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <div class="rb-left">
+        <div class="rb-title">Performance Metrics</div>
+        <div class="metric-row"><span class="mr-label">Working Capital</span><div class="mr-bar"><div class="mr-fill" style="width:82%;background:linear-gradient(90deg,var(--blue),var(--cyan));"></div></div><span class="mr-val">82%</span></div>
+        <div class="metric-row"><span class="mr-label">Documentation</span><div class="mr-bar"><div class="mr-fill" style="width:68%;background:linear-gradient(90deg,#6622cc,#a855f7);"></div></div><span class="mr-val">68%</span></div>
+        <div class="metric-row"><span class="mr-label">DSCR</span><div class="mr-bar"><div class="mr-fill" style="width:75%;background:linear-gradient(90deg,var(--blue),var(--cyan));"></div></div><span class="mr-val">1.42x</span></div>
+        <div class="metric-row"><span class="mr-label">Industry Rank</span><div class="mr-bar"><div class="mr-fill" style="width:60%;background:linear-gradient(90deg,#cc7700,var(--gold2));"></div></div><span class="mr-val">Top 40%</span></div>
+        <div class="metric-row"><span class="mr-label">Collateral</span><div class="mr-bar"><div class="mr-fill" style="width:90%;background:linear-gradient(90deg,#006633,var(--green));"></div></div><span class="mr-val">90%</span></div>
+
+        <div style="margin-top:1.2rem;" class="rb-title">Credit Trend Analysis</div>
+        <canvas id="report-canvas" height="110"></canvas>
+      </div>
+
+      <div class="rb-right">
+        <div class="rb-title">Predicted Bank Queries</div>
+        <div class="report-queries">
+          <div class="rq-title">AI Query Prediction Engine</div>
+          <span class="qpill">⚠ Debtor ageing details</span>
+          <span class="qpill">⚠ Justify 35% revenue growth</span>
+          <span class="qpill">⚠ GSTIN filing regularity</span>
+          <span class="qpill">⚠ Creditor turnover rationale</span>
+          <span class="qpill">⚠ Stock statement required</span>
+        </div>
+        <div class="report-rec">
+          <strong>🤖 AI Recommendation:</strong> Address debtor ageing and revenue projection rationale before submission. Predicted approval probability improves from 74% to <span style="color:var(--green)">88%</span> after corrections.
+        </div>
+        <div style="margin-top:1.2rem;" class="rb-title">Sector Intelligence</div>
+        <div style="background:rgba(0,0,0,.2);border:1px solid var(--border2);border-radius:6px;padding:.9rem;margin-top:.5rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:.5rem;">TEXTILE INDUSTRY · MSME SEGMENT</div>
+          <div class="metric-row"><span class="mr-label" style="font-size:.65rem;">Avg Current Ratio</span><div class="mr-bar"><div class="mr-fill" style="width:55%;background:linear-gradient(90deg,var(--blue),var(--cyan));"></div></div><span class="mr-val" style="font-size:.65rem;">1.35</span></div>
+          <div class="metric-row"><span class="mr-label" style="font-size:.65rem;">Your Current Ratio</span><div class="mr-bar"><div class="mr-fill" style="width:70%;background:linear-gradient(90deg,#006633,var(--green));"></div></div><span class="mr-val" style="font-size:.65rem;color:var(--green)">1.42 ↑</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-footer">
+      <span>Generated by CreditGuide AI Engine v2.4.1</span>
+      <span class="rf-generated">● Report Generated in 4m 32s</span>
+      <span>Confidential · Not for distribution</span>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Ready to See It in Action?</h2>
+  <p>Request a personalized demo and experience the future of MSME credit preparation.</p>
+  <a href="#" class="btn-primary btn-solid" onclick="showPage('contact');return false;">⚡ Request a Demo</a>
+</section>
+</div>
+
+<!-- ══════════════════ ABOUT ══════════════════ -->
+<div id="page-about" class="page">
+<section class="hero" style="min-height:50vh;padding-top:5rem;">
+  <div class="hero-aura"></div>
+  <div class="hud-badge"><span class="hud-dot" style="width:7px;height:7px;"></span>OUR STORY</div>
+  <h1>Building the Future of<br><span class="grad-text">MSME Credit</span><br>Intelligence</h1>
+  <p class="sub-head">We believe no creditworthy MSME should be denied a loan because of poor documentation or lack of financial expertise.</p>
+</section>
+
+<section>
+  <div class="vis">
+    <p>India's <strong>63 million MSMEs</strong> form the backbone of the economy — yet most struggle to access formal credit. The problem isn't creditworthiness. It's preparation. <strong>CreditGuide AI</strong> exists to close that gap, empowering businesses with AI-powered tools that were previously only available to large corporates with dedicated finance teams.</p>
+  </div>
+  <div style="margin-top:3.5rem;">
+    <div class="chip">💡 Mission</div>
+    <h2>Why We Exist</h2>
+  </div>
+  <div class="sol-grid" style="margin-top:1.8rem;">
+    <div class="sc"><div class="sc-icon">🇮🇳</div><h3>India's Credit Gap</h3><p>MSMEs contribute 30% of India's GDP yet face a ₹25 trillion formal credit gap — not because of risk, but information asymmetry between businesses and lenders.</p></div>
+    <div class="sc"><div class="sc-icon">🤖</div><h3>AI as the Equalizer</h3><p>AI gives every MSME owner the expertise of a seasoned credit manager — at a fraction of the cost and in a fraction of the time.</p></div>
+    <div class="sc"><div class="sc-icon">🌱</div><h3>Our Vision</h3><p>A future where every creditworthy MSME gets the loan it deserves, and documentation is never a barrier to growth.</p></div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="chip">👥 The Team</div>
+  <h2>Meet the Founders</h2>
+  <p class="ssub">Combining deep banking domain expertise with cutting-edge AI development.</p>
+  <div class="f-grid">
+    <div class="fc-card">
+      <div class="fc-av">AB</div>
+      <div>
+        <div class="fc-name">ATUL B</div>
+        <div class="fc-role">Co-Founder · Credit & Banking</div>
+        <div class="fc-bio">Deep expertise in MSME credit assessment, banking operations, and lending frameworks. Understands the gap between what banks need and what MSMEs provide — and built CreditGuide AI to bridge it permanently.</div>
+        <div class="fc-tags"><span class="ftag">MSME Credit</span><span class="ftag">Banking Ops</span><span class="ftag">Lending Frameworks</span><span class="ftag">Risk Assessment</span></div>
+      </div>
+    </div>
+    <div class="fc-card">
+      <div class="fc-av">MB</div>
+      <div>
+        <div class="fc-name">MANISH B</div>
+        <div class="fc-role">Co-Founder · Technology & AI</div>
+        <div class="fc-bio">Builds the AI and technology infrastructure behind CreditGuide AI. Passionate about using machine learning and NLP to solve real-world financial inclusion challenges at scale across India.</div>
+        <div class="fc-tags"><span class="ftag">Machine Learning</span><span class="ftag">NLP</span><span class="ftag">Cloud Infra</span><span class="ftag">FinTech</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Join Us on This Mission</h2>
+  <p>Whether you're an MSME, CA, consultant, or banker — let's connect and build the future together.</p>
+  <a href="#" class="btn-primary btn-solid" onclick="showPage('contact');return false;">⚡ Get in Touch</a>
+</section>
+</div>
+
+<!-- ══════════════════ CONTACT ══════════════════ -->
+<div id="page-contact" class="page">
+<section class="hero" style="min-height:40vh;padding-top:5rem;">
+  <div class="hero-aura"></div>
+  <div class="hud-badge"><span class="hud-dot" style="width:7px;height:7px;"></span>EARLY ACCESS · LIMITED SLOTS</div>
+  <h1>Request a <span class="grad-text">Demo</span><br>or Join the Waitlist</h1>
+  <p class="sub-head">Limited onboarding slots available. We'll respond within 24 hours.</p>
+</section>
+
+<section class="alt">
+  <div class="contact-grid">
+    <div class="cl">
+      <h3>Let's Talk</h3>
+      <p>We're actively onboarding early users — MSMEs, CAs, loan consultants, and banking professionals who want to be part of shaping the future of MSME credit intelligence in India.</p>
+      <div class="cdet"><div class="cdet-icon">📧</div><span>info@creditguideai.com</span></div>
+      <div class="cdet"><div class="cdet-icon">📍</div><span>India — Serving MSMEs Nationwide</span></div>
+      <div class="cdet"><div class="cdet-icon">⏱</div><span>Response within 24 hours</span></div>
+      <div class="cdet"><div class="cdet-icon">🔒</div><span>Bank-grade data confidentiality</span></div>
+      <div class="early">
+        <div class="early-t">⚡ Early Access Benefits</div>
+        <p>Priority onboarding · Free premium features during beta · Direct input into product roadmap · Founding user pricing locked in forever.</p>
+      </div>
+    </div>
+    <div class="form-hud">
+      <div class="ftitle">Request Demo / Early Access</div>
+      <div class="frow">
+        <div class="fg"><label>Your Name</label><input type="text" placeholder="Full name"/></div>
+        <div class="fg"><label>Business Name</label><input type="text" placeholder="Company / Firm"/></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Email</label><input type="email" placeholder="you@company.com"/></div>
+        <div class="fg"><label>Mobile</label><input type="tel" placeholder="+91 98765 43210"/></div>
+      </div>
+      <div class="fg"><label>I Am A</label>
+        <select>
+          <option value="">Select your role</option>
+          <option>MSME Business Owner</option>
+          <option>Chartered Accountant</option>
+          <option>Loan Consultant / DSA</option>
+          <option>Bank / NBFC Professional</option>
+          <option>Investor / Advisor</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Your Requirement</label><textarea placeholder="Tell us what you're looking for..."></textarea></div>
+      <button class="fsub" onclick="handleSubmit(this)">⚡ SUBMIT REQUEST →</button>
+      <div class="fprivacy">🔒 Your data is confidential. We never share your information.</div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fl">
+    <div class="logo-box" style="width:28px;height:28px;font-size:.8rem;">⚡</div>
+    <span class="logo-text" style="font-size:.9rem;">Credit<span>Guide</span> AI</span>
+  </div>
+  <div class="flinks">
+    <a href="#">Privacy Policy</a><a href="#">Terms of Use</a>
+    <a href="#" onclick="showPage('contact');return false;">Contact</a>
+  </div>
+  <div class="fcopy">© 2026 CreditGuide AI · Built in India 🇮🇳</div>
+</footer>
+
+<script>
+// ══ CURSOR ══
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring'),dot=document.getElementById('cursor-dot');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';dot.style.left=mx+'px';dot.style.top=my+'px';});
+(function ar(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(ar);})();
+
+// ══ NEURAL CANVAS ══
+(function(){
+  const c=document.getElementById('bg-canvas'),ctx=c.getContext('2d');
+  let W,H,nodes=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;init();}
+  function init(){nodes=[];const n=Math.floor(W*H/15000);for(let i=0;i<n;i++)nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.4});}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<140){ctx.beginPath();ctx.strokeStyle=`rgba(0,200,255,${(1-d/140)*.12})`;ctx.lineWidth=.5;ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);ctx.stroke();}
+    }
+    nodes.forEach(n=>{
+      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*3);
+      g.addColorStop(0,'rgba(0,229,255,0.7)');g.addColorStop(1,'rgba(0,229,255,0)');
+      ctx.fillStyle=g;ctx.fill();
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;
+    });
+    nodes.forEach(n=>{const dx=mx-n.x,dy=my-n.y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){n.x+=dx*.006;n.y+=dy*.006;}});
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+// ══ CONSCIOUSNESS CHART ══
+(function(){
+  const canvas=document.getElementById('cc-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth*2||600;canvas.height=240;ctx.scale(2,2);
+  const W=canvas.width/2,H=canvas.height/2;
+  // grid
+  ctx.strokeStyle='rgba(0,229,255,0.06)';ctx.lineWidth=.5;
+  for(let x=0;x<=W;x+=W/5){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=H/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // curves
+  function curve(pts,color,glow){
+    ctx.beginPath();
+    pts.forEach((p,i)=>{i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]);});
+    ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.shadowColor=glow;ctx.shadowBlur=6;ctx.stroke();
+    ctx.shadowBlur=0;
+    // dots
+    pts.forEach((p,i)=>{if(i%2===0){ctx.beginPath();ctx.arc(p[0],p[1],2,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();}});
+  }
+  const genCurve=(start,end,h,w,bend)=>{const pts=[];for(let i=0;i<=10;i++){const t=i/10;const x=t*w;const y=h-(h-start)*(1-Math.pow(t,bend||.4))+(end-start)*Math.pow(t,bend||.4);pts.push([x,h-y*((h-10)/h)]);}return pts;};
+  const h=H-10,w=W-10;
+  curve(genCurve(5,85,h,w,.35),'rgba(0,229,255,0.9)','rgba(0,229,255,0.8)');
+  curve(genCurve(5,72,h,w,.42),'rgba(0,255,136,0.9)','rgba(0,255,136,0.8)');
+  curve(genCurve(5,28,h,w,.8),'rgba(255,170,0,0.7)','rgba(255,170,0,0.5)');
+  // axis labels
+  ctx.fillStyle='rgba(74,122,155,0.8)';ctx.font='9px JetBrains Mono';
+  ['100','75','50','25'].forEach((l,i)=>{ctx.fillText(l,2,(i+1)*(H/4.5));});
+})();
+
+// ══ REPORT CANVAS ══
+(function(){
+  const canvas=document.getElementById('report-canvas');
+  if(!canvas)return;
+  function draw(){
+    canvas.width=canvas.offsetWidth*2||400;canvas.height=220;
+    const ctx=canvas.getContext('2d');ctx.scale(2,2);
+    const W=canvas.width/2,H=canvas.height/2;
+    ctx.fillStyle='rgba(0,0,0,0.2)';ctx.fillRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='rgba(0,229,255,0.05)';ctx.lineWidth=.5;
+    for(let y=0;y<H;y+=H/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    for(let x=0;x<W;x+=W/5){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    // Credit score trend
+    const pts1=[[0,H*.8],[W*.1,H*.72],[W*.2,H*.6],[W*.35,H*.55],[W*.5,H*.45],[W*.65,H*.38],[W*.8,H*.3],[W*.9,H*.25],[W,H*.22]];
+    const g1=ctx.createLinearGradient(0,0,W,0);g1.addColorStop(0,'rgba(0,102,255,.6)');g1.addColorStop(1,'rgba(0,229,255,.9)');
+    ctx.beginPath();pts1.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+    ctx.strokeStyle=g1;ctx.lineWidth=1.5;ctx.shadowColor='rgba(0,229,255,.5)';ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+    // Fill under curve
+    ctx.beginPath();ctx.moveTo(0,H);pts1.forEach(p=>ctx.lineTo(p[0],p[1]));ctx.lineTo(W,H);ctx.closePath();
+    const gFill=ctx.createLinearGradient(0,0,0,H);gFill.addColorStop(0,'rgba(0,229,255,0.1)');gFill.addColorStop(1,'rgba(0,229,255,0)');
+    ctx.fillStyle=gFill;ctx.fill();
+    // Approval line
+    const pts2=[[0,H*.6],[W*.15,H*.58],[W*.3,H*.52],[W*.45,H*.48],[W*.6,H*.4],[W*.75,H*.32],[W*.9,H*.28],[W,H*.26]];
+    const g2=ctx.createLinearGradient(0,0,W,0);g2.addColorStop(0,'rgba(0,150,50,.5)');g2.addColorStop(1,'rgba(0,255,136,.9)');
+    ctx.beginPath();pts2.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+    ctx.strokeStyle=g2;ctx.lineWidth=1.2;ctx.shadowColor='rgba(0,255,136,.4)';ctx.shadowBlur=6;ctx.stroke();ctx.shadowBlur=0;
+    // dots
+    pts1.forEach((p,i)=>{if(i===pts1.length-1){ctx.beginPath();ctx.arc(p[0],p[1],3,0,Math.PI*2);ctx.fillStyle='rgba(0,229,255,1)';ctx.shadowColor='rgba(0,229,255,1)';ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;}});
+    // labels
+    ctx.fillStyle='rgba(74,122,155,0.7)';ctx.font='7px JetBrains Mono';
+    ctx.fillText('Credit Score',W*.02,H*.18);ctx.fillStyle='rgba(0,229,255,0.7)';ctx.fillText('──',W*.18,H*.18);
+    ctx.fillStyle='rgba(74,122,155,0.7)';ctx.fillText('Approval Prob',W*.02,H*.3);ctx.fillStyle='rgba(0,255,136,0.7)';ctx.fillText('──',W*.22,H*.3);
+  }
+  draw();window.addEventListener('resize',()=>setTimeout(draw,100));
+})();
+
+// ══ TERMINAL ANIMATION ══
+(function(){
+  const el=document.getElementById('term-body');
+  if(!el)return;
+  const lines=[
+    {cls:'tp',t:'▶ '},{cls:'tc',t:'init credit_analysis --entity "Acme Textiles Pvt Ltd"'},
+    {cls:'to',t:'  Loading financial data modules...'},{cls:'tok',t:'  ✓ Balance sheet parsed (FY2022-25)'},
+    {cls:'tok',t:'  ✓ P&L statement analyzed'},{cls:'tok',t:'  ✓ Cash flow patterns detected'},
+    {cls:'tp',t:'▶ '},{cls:'tc',t:'run working_capital_assessment'},
+    {cls:'to',t:'  Computing 40+ financial ratios...'},
+    {cls:'tdata',t:'  Current Ratio: 1.42  |  Quick Ratio: 1.18'},
+    {cls:'tdata',t:'  Debtor Days: 62  |  Creditor Days: 45'},
+    {cls:'tw',t:'  ⚠ Working capital gap identified: ₹18.4L'},
+    {cls:'tp',t:'▶ '},{cls:'tc',t:'generate credit_score --model ensemble_v3'},
+    {cls:'to',t:'  Running 7 sub-models in parallel...'},
+    {cls:'tok',t:'  ✓ Credit Readiness Score: 74/100'},
+    {cls:'tp',t:'▶ '},{cls:'tc',t:'predict bank_queries --lender "SBI"'},
+    {cls:'tw',t:'  ⚠ 4 queries predicted with high confidence'},
+    {cls:'tok',t:'  ✓ CMA Report generated (22 pages)'},
+    {cls:'tok',t:'  ✓ Analysis complete in 4m 32s'},
+  ];
+  let li=0,ci=0;
+  function typeNext(){
+    if(li>=lines.length){el.innerHTML+='<div><span class="tp">▶ </span><span class="cblink"></span></div>';return;}
+    const line=lines[li];
+    const lineDiv=document.createElement('div');
+    const span=document.createElement('span');span.className=line.cls;
+    lineDiv.appendChild(span);el.appendChild(lineDiv);el.scrollTop=el.scrollHeight;
+    if(line.t.length>15&&line.cls!=='tp'){
+      span.textContent=line.t;li++;
+      setTimeout(typeNext,80);
+    } else {
+      let i=0;
+      function ch(){if(i<=line.t.length){span.textContent=line.t.substring(0,i);i++;setTimeout(ch,line.cls==='tp'?0:18);}else{li++;setTimeout(typeNext,line.cls==='tok'?60:20);}}
+      ch();
+    }
+  }
+  setTimeout(typeNext,600);
+})();
+
+// ══ PAGES ══
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══ FORM ══
+function handleSubmit(btn){
+  btn.innerHTML='✓ SUBMITTED · WE\'LL CONTACT YOU SOON';
+  btn.style.background='linear-gradient(135deg,rgba(0,150,50,.8),rgba(0,255,136,.6))';
+  btn.disabled=true;
+  setTimeout(()=>{btn.innerHTML='⚡ SUBMIT REQUEST →';btn.style.background='';btn.disabled=false;},5000);
+}
+
+// ══ AI CHAT ENGINE ══
+const chatState={open:false,history:[]};
+
+function toggleChat(){
+  chatState.open=!chatState.open;
+  const p=document.getElementById('ai-panel');
+  if(chatState.open){p.style.display='flex';requestAnimationFrame(()=>p.classList.add('open'));}
+  else{p.classList.remove('open');setTimeout(()=>p.style.display='none',200);}
+}
+
+function askSug(q){
+  document.getElementById('ai-input').value=q;
+  sendMsg();
+}
+
+const KB={
+  credit:[
+    "Your **Credit Readiness Score** is calculated by our ensemble AI engine across 7 sub-models:\n\n• Financial Ratios Analysis (Current, Quick, DSCR)\n• Documentation Completeness Check\n• Working Capital Health Assessment\n• Industry Benchmark Comparison\n• Cash Flow Pattern Analysis\n• Collateral Coverage Evaluation\n• Historical Repayment Behavior\n\nScores above **70/100** have a high probability of bank approval. We also give you specific action items to improve your score.",
+    "A Credit Readiness Score of **74/100** means you're in a good position to apply, but there are specific areas to improve. Our AI will show you exactly what's holding you back and how to fix it before approaching a bank."
+  ],
+  cma:[
+    "A **CMA (Credit Monitoring Arrangement)** report is a mandatory document banks require for working capital loans above ₹5 lakhs. It includes:\n\n• 3 years historical financials\n• 2 years projected financials\n• Fund flow statement\n• Working capital calculation\n• Ratio analysis\n\nOur AI generates a **complete, bank-compliant CMA in under 5 minutes** from your basic financial inputs — formatted to the exact standards of SBI, HDFC, ICICI, and major NBFCs.",
+    "Our CMA generation engine is trained on thousands of approved CMA reports. It formats everything precisely — down to the correct ratio formulae, projection methodology, and fund flow presentation that bank credit teams expect."
+  ],
+  bank:[
+    "Our **NLP-powered Query Prediction Engine** analyzes your financial data and predicts the most likely questions your bank's credit officer will ask. Common predicted queries include:\n\n• Debtor ageing statement details\n• Rationale for projected revenue growth\n• GST filing regularity\n• Explanation of creditor turnover change\n• Stock statement\n\nWe then help you **prepare answers in advance**, so your submission is already complete — eliminating weeks of back-and-forth.",
+    "Bank queries are the #1 reason loan approvals get delayed. Our system predicts them with high accuracy by comparing your profile against thousands of similar loan applications."
+  ],
+  time:[
+    "Here's the typical timeline with CreditGuide AI:\n\n• Data input: **10-15 minutes**\n• AI analysis: **2-3 minutes**\n• Report generation: **Under 5 minutes**\n• Total: **~20 minutes** vs. 2-3 weeks manually\n\nYour CA or consultant can then review and submit to the bank with confidence.",
+    "Traditional CMA preparation takes 2-4 weeks. CreditGuide AI reduces this to under 30 minutes. Banks also process AI-prepared documents faster because they're structured and complete."
+  ],
+  price:[
+    "CreditGuide AI is currently in **early access**. Pricing will be announced at launch, but early users receive:\n\n• Founding member pricing **locked in forever**\n• Free access to premium features during beta\n• Priority onboarding support\n• Direct input into product roadmap\n\nContact us to join the waitlist and secure your spot.",
+    "We offer both **per-report** and **monthly subscription** plans. CAs and consultants get volume pricing. Banks and NBFCs get enterprise plans. Contact us for details."
+  ],
+  default:[
+    "Great question! I'm the CreditGuide AI assistant. I can help you understand:\n\n• How credit readiness scoring works\n• CMA report generation\n• Bank query prediction\n• Working capital assessment\n• Pricing and onboarding\n\nWhat would you like to explore?",
+    "CreditGuide AI is an AI-powered platform that helps MSMEs prepare **bank-ready credit proposals** in minutes. Our engine analyzes your financials, generates CMA reports, predicts bank queries, and gives you a credit readiness score. What specific aspect interests you?",
+    "I'm here to help! Ask me about our AI models, the credit scoring process, CMA report generation, bank query prediction, or how to get started with early access."
+  ]
+};
+
+function streamText(el,text,cb){
+  const md=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br/>');
+  el.innerHTML='';
+  const cursor=document.createElement('span');cursor.className='stream-cursor';
+  let i=0;
+  const raw=text;
+  function next(){
+    if(i>=md.length){el.innerHTML=md;if(cb)cb();return;}
+    el.innerHTML=md.substring(0,i+1)+'<span class="stream-cursor"></span>';
+    i+=2;setTimeout(next,8+Math.random()*4);
+  }
+  next();
+}
+
+function sendMsg(){
+  const inp=document.getElementById('ai-input');
+  const txt=inp.value.trim();if(!txt)return;
+  inp.value='';
+  const msgs=document.getElementById('ai-msgs');
+
+  // Hide suggestions
+  document.getElementById('ai-sugs').style.display='none';
+
+  // User bubble
+  const um=document.createElement('div');um.className='ai-msg user';
+  um.innerHTML=txt+'<div class="ai-msg-meta">You · Just now</div>';
+  msgs.appendChild(um);
+
+  // Typing indicator
+  const ty=document.createElement('div');ty.className='ai-typing-msg';
+  ty.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  msgs.appendChild(ty);msgs.scrollTop=msgs.scrollHeight;
+
+  const tl=txt.toLowerCase();
+  const key=Object.keys(KB).find(k=>k!=='default'&&tl.includes(k))||'default';
+  const arr=KB[key];
+  const reply=arr[Math.floor(Math.random()*arr.length)];
+
+  setTimeout(()=>{
+    msgs.removeChild(ty);
+    const bm=document.createElement('div');bm.className='ai-msg bot';
+    const content=document.createElement('div');
+    const meta=document.createElement('div');meta.className='ai-msg-meta';meta.textContent='🤖 CreditGuide AI · Just now';
+    bm.appendChild(content);bm.appendChild(meta);
+    msgs.appendChild(bm);msgs.scrollTop=msgs.scrollHeight;
+
+    // Add mini metrics for credit/cma queries
+    if(key==='credit'||key==='cma'){
+      streamText(content,reply,()=>{
+        const mm=document.createElement('div');mm.className='ai-mini-metrics';
+        mm.innerHTML='<div class="amm-title">⬡ Live Credit Snapshot</div>'+
+          '<div class="amm-row"><span class="amm-label">Credit Score</span><div class="amm-bar-wrap"><div class="amm-bar" style="width:74%"></div></div><span class="amm-val">74/100</span></div>'+
+          '<div class="amm-row"><span class="amm-label">Documentation</span><div class="amm-bar-wrap"><div class="amm-bar" style="width:68%;background:linear-gradient(90deg,#6622cc,#a855f7)"></div></div><span class="amm-val">68%</span></div>'+
+          '<div class="amm-row"><span class="amm-label">Approval Prob</span><div class="amm-bar-wrap"><div class="amm-bar" style="width:74%;background:linear-gradient(90deg,#006633,var(--green))"></div></div><span class="amm-val" style="color:var(--green)">74%</span></div>';
+        bm.insertBefore(mm,meta);msgs.scrollTop=msgs.scrollHeight;
+      });
+    } else {
+      streamText(content,reply);
+    }
+    msgs.scrollTop=msgs.scrollHeight;
+  },700+Math.random()*600);
+}
+</script>
+</body>
+</html>
